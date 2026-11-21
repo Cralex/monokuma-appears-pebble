@@ -1,0 +1,118 @@
+"""Scale and color-convert the foreground images for emery.
+
+Reads resources/images/unscaled/frontNN.png (680x680 full color) and writes
+resources/images/frontNN.png (200x172, Pebble 64-color palette).
+
+Scaling: fit to the 200 px width (-> 200x200), then crop the top so the
+image is 172 px tall and stays anchored to the bottom edge, where it slides in.
+
+Color: a port of the default path of the TomHol PhotoWatch converter
+(https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html).
+With default settings (gamma 1, brightness/contrast/saturation/sharpen 0)
+no adjustments apply; each pixel is matched to the nearest color in the
+"sun" palette (how the Pebble Time 2 display actually renders each color),
+Atkinson error diffusion spreads the error, and the output gets the
+matching Pebble color at the same palette index.
+
+Usage (from the repo root):
+    uv run --with pillow --with numpy python3 -I tools/convert_images.py
+"""
+import os
+import sys
+
+import numpy as np
+from PIL import Image
+
+FG_W, FG_H = 200, 172
+NUM_IMAGES = 16
+
+# Pebble 64-color palette, in the converter's order ("defined").
+DEFINED = [
+    (0, 0, 0), (0, 0, 85), (0, 0, 170), (85, 0, 0),
+    (0, 0, 255), (85, 0, 85), (85, 0, 170), (0, 85, 0),
+    (170, 0, 85), (0, 85, 170), (170, 0, 170), (85, 85, 0),
+    (255, 0, 0), (0, 85, 255), (170, 0, 255), (85, 85, 85),
+    (0, 170, 0), (170, 85, 0), (85, 85, 255), (255, 0, 255),
+    (0, 170, 85), (170, 85, 85), (0, 170, 170), (170, 85, 170),
+    (170, 85, 255), (85, 170, 85), (255, 85, 85), (85, 170, 170),
+    (255, 85, 170), (0, 255, 0), (170, 170, 0), (85, 170, 255),
+    (0, 255, 170), (170, 170, 170), (85, 255, 0), (255, 170, 0),
+    (0, 255, 255), (170, 170, 255), (85, 255, 85), (255, 170, 85),
+    (85, 255, 255), (255, 170, 255), (170, 255, 85), (170, 255, 170),
+    (255, 255, 0), (170, 255, 255), (255, 255, 85), (255, 255, 170),
+    (170, 255, 0), (170, 170, 85), (255, 255, 255), (85, 255, 170),
+    (255, 85, 255), (85, 170, 0), (255, 0, 85), (170, 0, 0),
+    (0, 170, 255), (255, 0, 170), (0, 85, 85), (255, 170, 170),
+    (0, 255, 85), (255, 85, 0), (85, 85, 170), (85, 0, 255),
+]
+
+# How each DEFINED color looks on the real display ("sun"), same order.
+SUN = [
+    (39, 32, 32), (38, 52, 74), (27, 65, 104), (91, 36, 35),
+    (3, 72, 122), (88, 52, 71), (86, 69, 99), (63, 73, 50),
+    (136, 63, 81), (62, 108, 128), (136, 80, 112), (108, 82, 62),
+    (158, 45, 50), (44, 111, 141), (131, 89, 128), (103, 91, 90),
+    (87, 109, 69), (156, 95, 80), (108, 117, 140), (163, 95, 132),
+    (82, 123, 105), (146, 99, 97), (83, 132, 134), (141, 107, 118),
+    (149, 123, 142), (128, 130, 113), (169, 104, 103), (122, 138, 138),
+    (174, 111, 124), (97, 134, 91), (157, 121, 92), (114, 136, 148),
+    (95, 154, 143), (151, 141, 136), (139, 144, 107), (186, 130, 100),
+    (101, 163, 162), (151, 141, 136), (131, 141, 122), (181, 135, 117),
+    (137, 163, 158), (184, 157, 148), (162, 139, 119), (167, 164, 155),
+    (194, 151, 116), (167, 164, 155), (185, 154, 131), (184, 157, 148),
+    (175, 145, 107), (162, 139, 119), (188, 169, 166), (133, 155, 141),
+    (170, 124, 145), (126, 117, 84), (158, 66, 83), (128, 40, 44),
+    (79, 142, 155), (164, 86, 117), (65, 92, 95), (182, 145, 141),
+    (98, 145, 120), (174, 91, 75), (107, 107, 120), (85, 83, 125),
+]
+
+# Atkinson: 1/8 of the error to each of these (dx, dy) neighbors.
+ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
+
+
+def scale(src):
+    """Flatten onto black, fit to width, keep the bottom FG_H rows."""
+    rgba = src.convert("RGBA")
+    flat = Image.new("RGB", rgba.size, (0, 0, 0))
+    flat.paste(rgba, mask=rgba.getchannel("A"))
+    h = round(flat.height * FG_W / flat.width)
+    scaled = flat.resize((FG_W, h), Image.LANCZOS)
+    if h < FG_H:
+        sys.exit(f"scaled height {h} is shorter than {FG_H}")
+    return scaled.crop((0, h - FG_H, FG_W, h))
+
+
+def convert(img):
+    """Atkinson-dither against SUN, output DEFINED colors (palette mode)."""
+    sun = np.array(SUN, dtype=np.float64)
+    work = np.asarray(img, dtype=np.float64).copy()
+    h, w, _ = work.shape
+    idx = np.zeros((h, w), dtype=np.uint8)
+    for y in range(h):
+        for x in range(w):
+            px = work[y, x]
+            # First minimum wins, like the converter's strict "<" search.
+            best = int(np.argmin(((sun - px) ** 2).sum(axis=1)))
+            idx[y, x] = best
+            err = (px - sun[best]) * 0.125
+            for dx, dy in ATKINSON:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and ny < h:
+                    work[ny, nx] += err
+    out = Image.fromarray(idx, mode="P")
+    out.putpalette([c for rgb in DEFINED for c in rgb])
+    return out
+
+
+def main():
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    images = os.path.join(root, "resources", "images")
+    for n in range(1, NUM_IMAGES + 1):
+        name = f"front{n:02d}.png"
+        src = Image.open(os.path.join(images, "unscaled", name))
+        convert(scale(src)).save(os.path.join(images, name), optimize=True)
+        print("wrote", name)
+
+
+if __name__ == "__main__":
+    main()

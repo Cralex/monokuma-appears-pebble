@@ -22,4 +22,16 @@ pebble install --emulator emery
 - `src/c/main.c`: the watchface
 - `src/pkjs/index.js`: phone-side JS (starts Clay)
 - `src/pkjs/config.js`: Clay settings page definition
-- `resources/images/`: background and the 16 `front01`–`front16` images
+- `resources/images/`: background and the 16 `front01`–`front16` images (200×172, Pebble colors)
+- `resources/images/unscaled/`: full-color 680×680 originals of the 16 images
+- `tools/convert_images.py`: regenerates `front01`–`front16` from the originals
+
+## Updating the images
+
+Edit or replace the originals in `resources/images/unscaled/`, then run:
+
+```sh
+uv run --with pillow --with numpy python3 -I tools/convert_images.py
+```
+
+The script scales each image to 200 px wide and keeps the bottom 172 px. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color.
