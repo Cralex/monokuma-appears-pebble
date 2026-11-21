@@ -3,8 +3,9 @@
 Reads resources/images/unscaled/frontNN.png (680x680 full color) and writes
 resources/images/frontNN.png (200x172, Pebble 64-color palette).
 
-Scaling: fit to the 200 px width (-> 200x200), then crop the top so the
-image is 172 px tall and stays anchored to the bottom edge, where it slides in.
+Scaling: each image is zoomed on its own so Monokuma is as large as
+possible while staying fully visible (4 px of headroom), centered
+horizontally and anchored to the bottom edge, where it slides in.
 
 Color: a port of the default path of the TomHol PhotoWatch converter
 (https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html),
@@ -50,6 +51,8 @@ from PIL import Image
 
 FG_W, FG_H = 200, 172
 NUM_IMAGES = 16
+TOP_MARGIN = 4          # px of black kept above Monokuma's head
+SUBJECT_THRESHOLD = 24  # pixels brighter than this count as Monokuma
 
 # Pebble 64-color palette, in the converter's order ("defined").
 DEFINED = [
@@ -96,15 +99,39 @@ ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
 
 
 def scale(src):
-    """Flatten onto black, fit to width, keep the bottom FG_H rows."""
+    """Flatten onto black and zoom each image so Monokuma fills the frame.
+
+    Finds the box around everything brighter than the black background,
+    then picks the largest zoom that fits that box in FG_W x FG_H with
+    TOP_MARGIN px above it, centered on Monokuma horizontally and anchored
+    to the bottom edge. Areas outside the original are filled with black.
+    """
     rgba = src.convert("RGBA")
     flat = Image.new("RGB", rgba.size, (0, 0, 0))
     flat.paste(rgba, mask=rgba.getchannel("A"))
-    h = round(flat.height * FG_W / flat.width)
-    scaled = flat.resize((FG_W, h), Image.LANCZOS)
-    if h < FG_H:
-        sys.exit(f"scaled height {h} is shorter than {FG_H}")
-    return scaled.crop((0, h - FG_H, FG_W, h))
+
+    mask = np.asarray(flat).max(axis=2) > SUBJECT_THRESHOLD
+    ys, xs = np.nonzero(mask)
+    if len(xs) == 0:
+        sys.exit("image has no visible subject")
+    x0, x1 = xs.min(), xs.max() + 1
+    y0, y1 = ys.min(), ys.max() + 1
+
+    zoom = min(FG_W / (x1 - x0), (FG_H - TOP_MARGIN) / (y1 - y0))
+    crop_w, crop_h = FG_W / zoom, FG_H / zoom
+    if crop_w <= flat.width:
+        # Center on Monokuma, but don't pan past the image's sides.
+        left = min(max((x0 + x1) / 2 - crop_w / 2, 0), flat.width - crop_w)
+    else:
+        left = (flat.width - crop_w) / 2
+    top = y1 - crop_h
+
+    # Pad with black so a crop box past the image edges still works.
+    pad = int(max(-left, -top, 0)) + 1
+    padded = Image.new("RGB", (flat.width + 2 * pad, flat.height + 2 * pad))
+    padded.paste(flat, (pad, pad))
+    box = (left + pad, top + pad, left + crop_w + pad, y1 + pad)
+    return padded.resize((FG_W, FG_H), Image.LANCZOS, box=box)
 
 
 def convert(img):

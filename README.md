@@ -34,7 +34,7 @@ Edit or replace the originals in `resources/images/unscaled/`, then run:
 uv run --with pillow --with numpy python3 -I tools/convert_images.py
 ```
 
-The script scales each image to 200 px wide and keeps the bottom 172 px. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color.
+The script zooms each image on its own so Monokuma is as large as possible while staying fully visible: centered, anchored to the bottom edge, with 4 px of space above the head. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color.
 
 ## Credits
 
