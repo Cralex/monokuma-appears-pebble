@@ -71,6 +71,7 @@ PLATFORMS = {
 EMERY_FG_W = 200
 NUM_IMAGES = 16
 BG_W, BG_H = 200, 228   # the background original is emery-sized
+BW_SHAPE_GRAY = 128     # B&W screens: gray the red shape is drawn as
 ICON_SIZE = 25          # SDK maximum for menuIcon resources
 ICON_OUTLINE = True     # ring the switcher icon in black for contrast
 TOP_MARGIN = 4          # px of black kept above Monokuma's head
@@ -301,7 +302,14 @@ def main():
             convert(scale(src, fg_w, fg_h)).save(os.path.join(images, out),
                                                  optimize=True)
         out = f"background1{suffix}.png"
-        convert(place_background(bg, spec["screen"], fg_w)).save(
+        placed = place_background(bg, spec["screen"], fg_w)
+        if spec.get("bw"):
+            # The dark red would dither to a few faint dots; draw the shape
+            # as mid-gray instead so it reads clearly.
+            pixels = np.asarray(placed).copy()
+            pixels[red_mask(placed)] = BW_SHAPE_GRAY
+            placed = Image.fromarray(pixels)
+        convert(placed).save(
             os.path.join(images, out), optimize=True)
         print(f"wrote {platform}: {NUM_IMAGES} foregrounds and {out}")
 
