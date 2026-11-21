@@ -22,6 +22,7 @@ pebble install --emulator emery
 - `src/c/main.c`: the watchface
 - `src/pkjs/index.js`: phone-side JS (starts Clay)
 - `src/pkjs/config.js`: Clay settings page definition
+- `resources/fonts/dorblue-font/`: the DorBlue clock font, unchanged from the download, with its license file
 - `resources/images/`: background and the 16 `front01`–`front16` images (200×172, Pebble colors)
 - `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape with a black outline
 - `resources/images/unscaled/`: full-color originals (the 680×680 foreground images and the 200×228 background)
@@ -42,4 +43,5 @@ The script zooms each image on its own so Monokuma is as large as possible while
 - **Color conversion:** the method in `tools/convert_images.py` comes from TomHol ([czmanix](https://github.com/czmanix)). That includes the display-simulated color palette and the Atkinson dithering.
   - [Pebble Color Optimizer](https://github.com/czmanix/pebble-color-optimizer) ([try it live](https://czmanix.github.io/pebble-color-optimizer/)) is the original tool, MIT licensed, © 2026 czmanix.
   - The [PhotoWatch image converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html), the settings page of TomHol's PhotoWatch watchface, is a later version with more adjustment options. The script is a Python port of that converter's default settings.
+- **Clock font:** DorBlue by Bartek Nowak (Barmee), [www.nowak.tv/fontoholic](http://www.nowak.tv/fontoholic). It's free for non-commercial use and redistributed unchanged under the terms in [`barmefonts - licence.txt`](resources/fonts/dorblue-font/misc/barmefonts%20-%20licence.txt). Using it commercially, or distributing it as part of software, requires the author's permission.
 - **Settings page:** [Clay](https://github.com/pebble/clay) by Pebble.

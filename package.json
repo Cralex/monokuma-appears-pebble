@@ -118,6 +118,12 @@
           "type": "bitmap",
           "name": "IMAGE_FRONT_16",
           "file": "images/front16.png"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_48",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]"
         }
       ]
     }

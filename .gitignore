@@ -4,3 +4,6 @@ build/
 node_modules/
 .claude/settings.local.json
 __pycache__/
+
+# Fonts without a license that allows redistribution
+resources/fonts/goodbyeDespair.ttf

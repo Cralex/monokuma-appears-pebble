@@ -10,6 +10,7 @@
 #define FG_Y_SHOWN        56    // = 228 - 172
 #define FG_Y_HIDDEN       228
 #define CLOCK_H           FG_Y_SHOWN
+#define CLOCK_FONT_Y      -5    // nudges the clock text to center it in the band
 #define ANIM_INTERVAL_MS  33    // ~30 fps
 #define SLIDE_STEP        12    // pixels per frame
 #define FADE_MAX          4     // fade steps; 4 * 33ms = 132ms per fade
@@ -44,6 +45,7 @@ typedef enum {
 static Window    *s_window;
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
+static GFont      s_time_font;
 static GBitmap   *s_bg_bitmap;
 static GBitmap   *s_fg_bitmap;
 static AppTimer  *s_anim_timer  = NULL;
@@ -313,12 +315,14 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_canvas_layer, canvas_update_proc);
     layer_add_child(root, s_canvas_layer);
 
-    s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, CLOCK_H));
+    s_time_font = fonts_load_custom_font(
+        resource_get_handle(RESOURCE_ID_FONT_DORBLUE_48));
+    s_time_layer = text_layer_create(
+        GRect(0, CLOCK_FONT_Y, bounds.size.w, CLOCK_H - CLOCK_FONT_Y));
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-    text_layer_set_font(s_time_layer,
-                        fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
+    text_layer_set_font(s_time_layer, s_time_font);
     layer_set_hidden(text_layer_get_layer(s_time_layer), true);
     layer_add_child(root, text_layer_get_layer(s_time_layer));
 
@@ -337,6 +341,7 @@ static void window_unload(Window *window) {
     tick_timer_service_unsubscribe();
 
     if (s_time_layer)  { text_layer_destroy(s_time_layer);  s_time_layer  = NULL; }
+    if (s_time_font)   { fonts_unload_custom_font(s_time_font); s_time_font = NULL; }
     if (s_canvas_layer){ layer_destroy(s_canvas_layer);     s_canvas_layer = NULL; }
     if (s_fg_bitmap)   { gbitmap_destroy(s_fg_bitmap);      s_fg_bitmap   = NULL; }
     if (s_bg_bitmap)   { gbitmap_destroy(s_bg_bitmap);      s_bg_bitmap   = NULL; }
