@@ -51,6 +51,8 @@ from PIL import Image
 
 FG_W, FG_H = 200, 172
 NUM_IMAGES = 16
+BG_W, BG_H = 200, 228   # background is full screen, used unscaled
+ICON_SIZE = 25          # SDK maximum for menuIcon resources
 TOP_MARGIN = 4          # px of black kept above Monokuma's head
 SUBJECT_THRESHOLD = 24  # pixels brighter than this count as Monokuma
 
@@ -156,6 +158,50 @@ def convert(img):
     return out
 
 
+def flatten(src):
+    rgba = src.convert("RGBA")
+    flat = Image.new("RGB", rgba.size, (0, 0, 0))
+    flat.paste(rgba, mask=rgba.getchannel("A"))
+    return flat
+
+
+def red_mask(img):
+    """Boolean mask of the background's red shape."""
+    a = np.asarray(img, dtype=np.int16)
+    return (a[..., 0] > 2 * a[..., 1] + 40) & (a[..., 0] > 2 * a[..., 2] + 40)
+
+
+def menu_icon(bg):
+    """Build the launcher icon from the background's red shape.
+
+    The shape is cropped, scaled to fit ICON_SIZE x ICON_SIZE, and centered
+    on a transparent square. Edges are anti-aliased with Pebble's four alpha
+    levels. The fill is the Pebble color the converter picks for the
+    original's average red.
+    """
+    flat = flatten(bg)
+    mask = red_mask(flat)
+    ys, xs = np.nonzero(mask)
+    x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+
+    sun = np.array(SUN, dtype=np.float64)
+    avg = np.asarray(flat, dtype=np.float64)[mask].mean(axis=0)
+    fill = DEFINED[int(np.argmin(((sun - avg) ** 2).sum(axis=1)))]
+
+    zoom = ICON_SIZE / max(x1 - x0, y1 - y0)
+    w = max(1, round((x1 - x0) * zoom))
+    h = max(1, round((y1 - y0) * zoom))
+    shape = Image.fromarray((mask * 255).astype(np.uint8)).crop((x0, y0, x1, y1))
+    alpha = np.asarray(shape.resize((w, h), Image.LANCZOS), dtype=np.float64)
+    alpha = (np.round(alpha / 85) * 85).astype(np.uint8)  # 0, 85, 170, 255
+
+    icon = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), fill + (0,))
+    layer = Image.new("RGBA", (w, h), fill + (255,))
+    layer.putalpha(Image.fromarray(alpha))
+    icon.paste(layer, ((ICON_SIZE - w) // 2, (ICON_SIZE - h) // 2))
+    return icon
+
+
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
     images = os.path.join(root, "resources", "images")
@@ -164,6 +210,16 @@ def main():
         src = Image.open(os.path.join(images, "unscaled", name))
         convert(scale(src)).save(os.path.join(images, name), optimize=True)
         print("wrote", name)
+
+    bg = Image.open(os.path.join(images, "unscaled", "background1.png"))
+    if bg.size != (BG_W, BG_H):
+        sys.exit(f"background1.png must be {BG_W}x{BG_H}, got {bg.size}")
+    convert(flatten(bg)).save(os.path.join(images, "background1.png"),
+                              optimize=True)
+    print("wrote background1.png")
+
+    menu_icon(bg).save(os.path.join(images, "menu_icon.png"), optimize=True)
+    print("wrote menu_icon.png")
 
 
 if __name__ == "__main__":
