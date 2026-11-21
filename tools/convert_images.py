@@ -1,11 +1,19 @@
-"""Scale and color-convert the foreground images for emery.
+"""Scale and color-convert the watchface images for each color platform.
 
-Reads resources/images/unscaled/frontNN.png (680x680 full color) and writes
-resources/images/frontNN.png (200x172, Pebble 64-color palette).
+Reads the full-color originals in resources/images/unscaled/ and writes,
+for every platform in PLATFORMS, frontNN.png (Monokuma), background1.png
+and, once, menu_icon.png. Emery files have no suffix; other platforms use
+Pebble's file tags (frontNN~basalt.png), which the SDK picks per platform.
 
-Scaling: each image is zoomed on its own so Monokuma is as large as
-possible while staying fully visible (4 px of headroom), centered
-horizontally and anchored to the bottom edge, where it slides in.
+Every size is made straight from the originals, never from another
+platform's output. Layouts follow emery's: the foreground keeps emery's
+200:172 shape, sits on the bottom edge, and the background is scaled by
+the same factor and anchored the same way.
+
+Scaling: each foreground image is zoomed on its own so Monokuma is as large
+as possible while staying fully visible (4 px of headroom on emery, scaled
+on other platforms), centered horizontally and anchored to the bottom edge,
+where it slides in.
 
 Color: a port of the default path of the TomHol PhotoWatch converter
 (https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html),
@@ -49,9 +57,17 @@ import sys
 import numpy as np
 from PIL import Image, ImageFilter
 
-FG_W, FG_H = 200, 172
+# Screen size, foreground size and file suffix per platform. Keep in sync
+# with the layout constants in src/c/main.c.
+PLATFORMS = {
+    "emery":  {"screen": (200, 228), "fg": (200, 172), "suffix": ""},
+    "basalt": {"screen": (144, 168), "fg": (144, 124), "suffix": "~basalt"},
+    "chalk":  {"screen": (180, 180), "fg": (142, 123), "suffix": "~chalk"},
+    "gabbro": {"screen": (260, 260), "fg": (212, 182), "suffix": "~gabbro"},
+}
+EMERY_FG_W = 200
 NUM_IMAGES = 16
-BG_W, BG_H = 200, 228   # background is full screen, used unscaled
+BG_W, BG_H = 200, 228   # the background original is emery-sized
 ICON_SIZE = 25          # SDK maximum for menuIcon resources
 ICON_OUTLINE = True     # ring the switcher icon in black for contrast
 TOP_MARGIN = 4          # px of black kept above Monokuma's head
@@ -101,12 +117,12 @@ SUN = [
 ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
 
 
-def scale(src):
+def scale(src, fg_w, fg_h):
     """Flatten onto black and zoom each image so Monokuma fills the frame.
 
     Finds the box around everything brighter than the black background,
-    then picks the largest zoom that fits that box in FG_W x FG_H with
-    TOP_MARGIN px above it, centered on Monokuma horizontally and anchored
+    then picks the largest zoom that fits that box in fg_w x fg_h with
+    TOP_MARGIN px (scaled from emery) above it, centered on Monokuma horizontally and anchored
     to the bottom edge. Areas outside the original are filled with black.
     """
     rgba = src.convert("RGBA")
@@ -120,8 +136,9 @@ def scale(src):
     x0, x1 = xs.min(), xs.max() + 1
     y0, y1 = ys.min(), ys.max() + 1
 
-    zoom = min(FG_W / (x1 - x0), (FG_H - TOP_MARGIN) / (y1 - y0))
-    crop_w, crop_h = FG_W / zoom, FG_H / zoom
+    margin = max(2, round(TOP_MARGIN * fg_w / EMERY_FG_W))
+    zoom = min(fg_w / (x1 - x0), (fg_h - margin) / (y1 - y0))
+    crop_w, crop_h = fg_w / zoom, fg_h / zoom
     if crop_w <= flat.width:
         # Center on Monokuma, but don't pan past the image's sides.
         left = min(max((x0 + x1) / 2 - crop_w / 2, 0), flat.width - crop_w)
@@ -134,7 +151,7 @@ def scale(src):
     padded = Image.new("RGB", (flat.width + 2 * pad, flat.height + 2 * pad))
     padded.paste(flat, (pad, pad))
     box = (left + pad, top + pad, left + crop_w + pad, y1 + pad)
-    return padded.resize((FG_W, FG_H), Image.LANCZOS, box=box)
+    return padded.resize((fg_w, fg_h), Image.LANCZOS, box=box)
 
 
 def convert(img):
@@ -218,21 +235,45 @@ def menu_icon(bg, outline=ICON_OUTLINE):
     return icon
 
 
+def place_background(bg, screen, fg_w):
+    """Scale the emery background like the foreground and fit it to a screen.
+
+    It shrinks or grows by the same factor as the foreground (fg_w / 200),
+    sits on the bottom edge, is centered, and any leftover space is filled
+    with the original's background color.
+    """
+    flat = flatten(bg)
+    if screen == flat.size:
+        return flat
+    factor = fg_w / EMERY_FG_W
+    size = (round(flat.width * factor), round(flat.height * factor))
+    scaled = flat.resize(size, Image.LANCZOS)
+    canvas = Image.new("RGB", screen, flat.getpixel((0, 0)))
+    canvas.paste(scaled, ((screen[0] - size[0]) // 2, screen[1] - size[1]))
+    return canvas
+
+
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
     images = os.path.join(root, "resources", "images")
-    for n in range(1, NUM_IMAGES + 1):
-        name = f"front{n:02d}.png"
-        src = Image.open(os.path.join(images, "unscaled", name))
-        convert(scale(src)).save(os.path.join(images, name), optimize=True)
-        print("wrote", name)
+    unscaled = os.path.join(images, "unscaled")
 
-    bg = Image.open(os.path.join(images, "unscaled", "background1.png"))
+    bg = Image.open(os.path.join(unscaled, "background1.png"))
     if bg.size != (BG_W, BG_H):
         sys.exit(f"background1.png must be {BG_W}x{BG_H}, got {bg.size}")
-    convert(flatten(bg)).save(os.path.join(images, "background1.png"),
-                              optimize=True)
-    print("wrote background1.png")
+
+    for platform, spec in PLATFORMS.items():
+        fg_w, fg_h = spec["fg"]
+        suffix = spec["suffix"]
+        for n in range(1, NUM_IMAGES + 1):
+            src = Image.open(os.path.join(unscaled, f"front{n:02d}.png"))
+            out = f"front{n:02d}{suffix}.png"
+            convert(scale(src, fg_w, fg_h)).save(os.path.join(images, out),
+                                                 optimize=True)
+        out = f"background1{suffix}.png"
+        convert(place_background(bg, spec["screen"], fg_w)).save(
+            os.path.join(images, out), optimize=True)
+        print(f"wrote {platform}: {NUM_IMAGES} foregrounds and {out}")
 
     menu_icon(bg).save(os.path.join(images, "menu_icon.png"), optimize=True)
     print("wrote menu_icon.png")

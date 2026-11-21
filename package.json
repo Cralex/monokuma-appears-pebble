@@ -7,7 +7,7 @@
   ],
   "private": true,
   "dependencies": {
-    "pebble-clay": "^1.0.4"
+    "@rebble/clay": "^1.1.0"
   },
   "pebble": {
     "displayName": "Monokuma Appears",
@@ -15,7 +15,10 @@
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
-      "emery"
+      "emery",
+      "basalt",
+      "chalk",
+      "gabbro"
     ],
     "watchapp": {
       "watchface": true
@@ -124,7 +127,37 @@
           "type": "font",
           "name": "FONT_DORBLUE_48",
           "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
-          "characterRegex": "[0-9:]"
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "emery"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_34",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "basalt"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_32",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "chalk"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_46",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "gabbro"
+          ]
         }
       ]
     }

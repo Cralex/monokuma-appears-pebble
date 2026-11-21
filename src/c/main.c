@@ -5,14 +5,53 @@
 // ============================================================================
 
 #define NUM_FG_IMAGES     16
+
+// Per-platform layout, scaled from emery's. The foreground keeps emery's
+// 200:172 shape and sits on the bottom edge; the clock is centered in the
+// band above it. Keep FG sizes in sync with tools/convert_images.py.
+#if defined(PBL_PLATFORM_BASALT)        // 144x168
+#define FG_X              0
+#define FG_W              144
+#define FG_H              124
+#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_34
+#define DORBLUE_Y         -1
+#define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
+#define LECO_Y            2
+#define SLIDE_STEP        9
+#elif defined(PBL_PLATFORM_CHALK)       // 180x180 round
+#define FG_X              19
+#define FG_W              142
+#define FG_H              123
+#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_32
+#define DORBLUE_Y         15
+#define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
+#define LECO_Y            16
+#define SLIDE_STEP        9
+#elif defined(PBL_PLATFORM_GABBRO)      // 260x260 round
+#define FG_X              24
+#define FG_W              212
+#define FG_H              182
+#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_46
+#define DORBLUE_Y         20
+#define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
+#define LECO_Y            24
+#define SLIDE_STEP        13
+#else                                   // emery, 200x228
+#define FG_X              0
 #define FG_W              200
 #define FG_H              172
-#define FG_Y_SHOWN        56    // = 228 - 172
-#define FG_Y_HIDDEN       228
-#define CLOCK_H           FG_Y_SHOWN
+#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_48
 #define DORBLUE_Y         -5    // nudges DorBlue to center it in the clock band
-#define ANIM_INTERVAL_MS  33    // ~30 fps
+#define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
+#define LECO_Y            0
 #define SLIDE_STEP        12    // pixels per frame
+#endif
+
+#define SCREEN_H          PBL_DISPLAY_HEIGHT
+#define FG_Y_SHOWN        (SCREEN_H - FG_H)
+#define FG_Y_HIDDEN       SCREEN_H
+#define CLOCK_H           FG_Y_SHOWN
+#define ANIM_INTERVAL_MS  33    // ~30 fps
 #define FADE_MAX          4     // fade steps; 4 * 33ms = 132ms per fade
 #define PAUSE_DURATION_MS 1000  // background-only pause between fg changes
 #define INITIAL_DELAY_MIN_MS 1000  // random boot delay before first fade/clock
@@ -149,7 +188,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     if (s_fg_bitmap) {
         graphics_context_set_compositing_mode(ctx, GCompOpSet);
         graphics_draw_bitmap_in_rect(ctx, s_fg_bitmap,
-                                     GRect(0, s_fg_y, FG_W, FG_H));
+                                     GRect(FG_X, s_fg_y, FG_W, FG_H));
     }
 }
 
@@ -287,10 +326,9 @@ static void apply_clock_font(void) {
     Layer *layer = text_layer_get_layer(s_time_layer);
     GRect frame = layer_get_frame(layer);
     if (s_clock_font == CLOCK_FONT_LECO) {
-        text_layer_set_font(s_time_layer,
-                            fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
-        frame.origin.y = 0;
-        frame.size.h = CLOCK_H;
+        text_layer_set_font(s_time_layer, fonts_get_system_font(LECO_KEY));
+        frame.origin.y = LECO_Y;
+        frame.size.h = CLOCK_H - LECO_Y;
     } else {
         text_layer_set_font(s_time_layer, s_dorblue_font);
         frame.origin.y = DORBLUE_Y;
@@ -354,7 +392,7 @@ static void window_load(Window *window) {
     layer_add_child(root, s_canvas_layer);
 
     s_dorblue_font = fonts_load_custom_font(
-        resource_get_handle(RESOURCE_ID_FONT_DORBLUE_48));
+        resource_get_handle(DORBLUE_RES));
     s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, CLOCK_H));
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_color(s_time_layer, GColorWhite);
