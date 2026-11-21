@@ -10,7 +10,7 @@
 #define FG_Y_SHOWN        56    // = 228 - 172
 #define FG_Y_HIDDEN       228
 #define CLOCK_H           FG_Y_SHOWN
-#define CLOCK_FONT_Y      -5    // nudges the clock text to center it in the band
+#define DORBLUE_Y         -5    // nudges DorBlue to center it in the clock band
 #define ANIM_INTERVAL_MS  33    // ~30 fps
 #define SLIDE_STEP        12    // pixels per frame
 #define FADE_MAX          4     // fade steps; 4 * 33ms = 132ms per fade
@@ -18,6 +18,7 @@
 #define INITIAL_DELAY_MIN_MS 1000  // random boot delay before first fade/clock
 #define INITIAL_DELAY_MAX_MS 3000
 #define PERSIST_KEY_SHAKE 0
+#define PERSIST_KEY_FONT  1
 
 // ============================================================================
 // STATE
@@ -45,7 +46,14 @@ typedef enum {
 static Window    *s_window;
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
-static GFont      s_time_font;
+static GFont      s_dorblue_font;
+
+// Clock fonts offered in the settings; values match config.js.
+typedef enum {
+    CLOCK_FONT_DORBLUE = 0,
+    CLOCK_FONT_LECO    = 1,
+} ClockFont;
+static ClockFont  s_clock_font  = CLOCK_FONT_DORBLUE;
 static GBitmap   *s_bg_bitmap;
 static GBitmap   *s_fg_bitmap;
 static AppTimer  *s_anim_timer  = NULL;
@@ -274,7 +282,37 @@ static void apply_shake_setting(void) {
     }
 }
 
+static void apply_clock_font(void) {
+    if (!s_time_layer) return;
+    Layer *layer = text_layer_get_layer(s_time_layer);
+    GRect frame = layer_get_frame(layer);
+    if (s_clock_font == CLOCK_FONT_LECO) {
+        text_layer_set_font(s_time_layer,
+                            fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
+        frame.origin.y = 0;
+        frame.size.h = CLOCK_H;
+    } else {
+        text_layer_set_font(s_time_layer, s_dorblue_font);
+        frame.origin.y = DORBLUE_Y;
+        frame.size.h = CLOCK_H - DORBLUE_Y;
+    }
+    layer_set_frame(layer, frame);
+}
+
+// Clay sends a select's value as a string; accept integers too.
+static int32_t tuple_int(const Tuple *t) {
+    return t->type == TUPLE_CSTRING ? atoi(t->value->cstring) : t->value->int32;
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+    Tuple *font = dict_find(iter, MESSAGE_KEY_CLOCK_FONT);
+    if (font) {
+        int32_t v = tuple_int(font);
+        s_clock_font = (v == CLOCK_FONT_LECO) ? CLOCK_FONT_LECO : CLOCK_FONT_DORBLUE;
+        persist_write_int(PERSIST_KEY_FONT, s_clock_font);
+        apply_clock_font();
+    }
+
     Tuple *t = dict_find(iter, MESSAGE_KEY_SHAKE_ENABLED);
     if (t) {
         s_shake_enabled = (bool)t->value->int32;
@@ -315,17 +353,16 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_canvas_layer, canvas_update_proc);
     layer_add_child(root, s_canvas_layer);
 
-    s_time_font = fonts_load_custom_font(
+    s_dorblue_font = fonts_load_custom_font(
         resource_get_handle(RESOURCE_ID_FONT_DORBLUE_48));
-    s_time_layer = text_layer_create(
-        GRect(0, CLOCK_FONT_Y, bounds.size.w, CLOCK_H - CLOCK_FONT_Y));
+    s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, CLOCK_H));
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-    text_layer_set_font(s_time_layer, s_time_font);
     layer_set_hidden(text_layer_get_layer(s_time_layer), true);
     layer_add_child(root, text_layer_get_layer(s_time_layer));
 
+    apply_clock_font();
     apply_shake_setting();
     uint32_t initial_delay = INITIAL_DELAY_MIN_MS +
         rand() % (INITIAL_DELAY_MAX_MS - INITIAL_DELAY_MIN_MS + 1);
@@ -341,7 +378,7 @@ static void window_unload(Window *window) {
     tick_timer_service_unsubscribe();
 
     if (s_time_layer)  { text_layer_destroy(s_time_layer);  s_time_layer  = NULL; }
-    if (s_time_font)   { fonts_unload_custom_font(s_time_font); s_time_font = NULL; }
+    if (s_dorblue_font) { fonts_unload_custom_font(s_dorblue_font); s_dorblue_font = NULL; }
     if (s_canvas_layer){ layer_destroy(s_canvas_layer);     s_canvas_layer = NULL; }
     if (s_fg_bitmap)   { gbitmap_destroy(s_fg_bitmap);      s_fg_bitmap   = NULL; }
     if (s_bg_bitmap)   { gbitmap_destroy(s_bg_bitmap);      s_bg_bitmap   = NULL; }
@@ -354,6 +391,8 @@ static void window_unload(Window *window) {
 static void init(void) {
     srand(time(NULL));
 
+    s_clock_font = (persist_read_int(PERSIST_KEY_FONT) == CLOCK_FONT_LECO)
+                   ? CLOCK_FONT_LECO : CLOCK_FONT_DORBLUE;
     s_shake_enabled = persist_exists(PERSIST_KEY_SHAKE)
                       ? persist_read_bool(PERSIST_KEY_SHAKE)
                       : true;

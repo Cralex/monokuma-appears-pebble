@@ -24,6 +24,7 @@
       "configurable"
     ],
     "messageKeys": [
+      "CLOCK_FONT",
       "SHAKE_ENABLED"
     ],
     "resources": {

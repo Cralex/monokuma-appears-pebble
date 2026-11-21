@@ -6,6 +6,7 @@ A Pebble watchface for **emery** (Pebble Time 2). Monokuma appears over a backgr
 
 Settings use [Clay](https://github.com/pebble/clay) and open from the watchface's gear icon in the Pebble phone app:
 
+- **Clock font** (`CLOCK_FONT`, DorBlue by default): DorBlue, or LECO, Pebble's built-in numeric font.
 - **Change image on shake** (`SHAKE_ENABLED`, on by default): whether shaking or tapping the watch switches the image.
 
 To try the settings page in the emulator, run `pebble emu-app-config --emulator emery`.

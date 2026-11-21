@@ -8,6 +8,25 @@ module.exports = [
     "items": [
       {
         "type": "heading",
+        "defaultValue": "Appearance"
+      },
+      {
+        "type": "radiogroup",
+        "messageKey": "CLOCK_FONT",
+        "label": "Clock font",
+        "defaultValue": "0",
+        "options": [
+          { "label": "DorBlue", "value": "0" },
+          { "label": "LECO (Pebble system font)", "value": "1" }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
         "defaultValue": "Behavior"
       },
       {
