@@ -1,7 +1,7 @@
 module.exports = [
   {
     "type": "heading",
-    "defaultValue": "Monokuma Appears"
+    "defaultValue": "Monokuma Appears!"
   },
   {
     "type": "section",

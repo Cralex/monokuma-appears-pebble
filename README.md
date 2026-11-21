@@ -1,4 +1,4 @@
-# Monokuma Appears
+# Monokuma Appears!
 
 A Pebble watchface for the color Pebbles. Monokuma appears over a background in one of 16 poses. On launch, the opening image stays on screen for a random 1–3 seconds before it fades and the clock appears. Shaking or tapping the watch switches to a different image.
 

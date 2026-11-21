@@ -1,6 +1,6 @@
 {
   "name": "monokuma-appears",
-  "author": "cralex",
+  "author": "Cralex",
   "version": "1.0.0",
   "keywords": [
     "pebble-app"
@@ -10,7 +10,7 @@
     "@rebble/clay": "^1.1.0"
   },
   "pebble": {
-    "displayName": "Monokuma Appears",
+    "displayName": "Monokuma Appears!",
     "uuid": "8b8f0753-4f98-4864-9dd7-6c25ac1952c1",
     "sdkVersion": "3",
     "enableMultiJS": true,
