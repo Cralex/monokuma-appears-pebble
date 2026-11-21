@@ -63,7 +63,7 @@
 // Debug: show every image in order, one every DEBUG_CYCLE_MS once it's fully
 // shown, with the image number (01-16) in place of the time. Set to 0 for
 // normal behavior (random images that change each minute).
-#define DEBUG_CYCLE       1
+#define DEBUG_CYCLE       0
 #define DEBUG_CYCLE_MS    3000
 
 // ============================================================================
