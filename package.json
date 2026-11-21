@@ -1,0 +1,108 @@
+{
+  "name": "monokuma-appears",
+  "author": "cralex",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Monokuma Appears",
+    "uuid": "8b8f0753-4f98-4864-9dd7-6c25ac1952c1",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["emery"],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": ["SHAKE_ENABLED"],
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "IMAGE_BACKGROUND",
+          "file": "images/background1.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_01",
+          "file": "images/front01.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_02",
+          "file": "images/front02.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_03",
+          "file": "images/front03.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_04",
+          "file": "images/front04.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_05",
+          "file": "images/front05.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_06",
+          "file": "images/front06.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_07",
+          "file": "images/front07.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_08",
+          "file": "images/front08.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_09",
+          "file": "images/front09.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_10",
+          "file": "images/front10.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_11",
+          "file": "images/front11.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_12",
+          "file": "images/front12.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_13",
+          "file": "images/front13.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_14",
+          "file": "images/front14.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_15",
+          "file": "images/front15.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_16",
+          "file": "images/front16.png"
+        }
+      ]
+    }
+  }
+}
