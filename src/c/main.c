@@ -14,6 +14,8 @@
 #define SLIDE_STEP        12    // pixels per frame
 #define FADE_MAX          4     // fade steps; 4 * 33ms = 132ms per fade
 #define PAUSE_DURATION_MS 1000  // background-only pause between fg changes
+#define INITIAL_DELAY_MIN_MS 1000  // random boot delay before first fade/clock
+#define INITIAL_DELAY_MAX_MS 3000
 #define PERSIST_KEY_SHAKE 0
 
 // ============================================================================
@@ -46,6 +48,7 @@ static GBitmap   *s_bg_bitmap;
 static GBitmap   *s_fg_bitmap;
 static AppTimer  *s_anim_timer  = NULL;
 static AppTimer  *s_pause_timer = NULL;
+static AppTimer  *s_initial_timer = NULL;
 static WatchState s_state       = STATE_INIT;
 static AfterFade  s_after_fade  = AFTER_NONE;
 static int        s_fg_y        = FG_Y_HIDDEN;
@@ -292,6 +295,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void initial_timer_callback(void *data) {
+    s_initial_timer = NULL;
     start_fade_out(AFTER_SLIDE_UP);
 }
 
@@ -319,13 +323,16 @@ static void window_load(Window *window) {
     layer_add_child(root, text_layer_get_layer(s_time_layer));
 
     apply_shake_setting();
-    app_timer_register(50, initial_timer_callback, NULL);
+    uint32_t initial_delay = INITIAL_DELAY_MIN_MS +
+        rand() % (INITIAL_DELAY_MAX_MS - INITIAL_DELAY_MIN_MS + 1);
+    s_initial_timer = app_timer_register(initial_delay, initial_timer_callback, NULL);
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 }
 
 static void window_unload(Window *window) {
     if (s_anim_timer)  { app_timer_cancel(s_anim_timer);  s_anim_timer  = NULL; }
     if (s_pause_timer) { app_timer_cancel(s_pause_timer); s_pause_timer = NULL; }
+    if (s_initial_timer) { app_timer_cancel(s_initial_timer); s_initial_timer = NULL; }
     accel_tap_service_unsubscribe();
     tick_timer_service_unsubscribe();
 
