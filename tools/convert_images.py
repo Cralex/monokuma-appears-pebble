@@ -7,7 +7,9 @@ Scaling: fit to the 200 px width (-> 200x200), then crop the top so the
 image is 172 px tall and stays anchored to the bottom edge, where it slides in.
 
 Color: a port of the default path of the TomHol PhotoWatch converter
-(https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html).
+(https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html),
+a later version of Pebble Color Optimizer
+(https://github.com/czmanix/pebble-color-optimizer).
 With default settings (gamma 1, brightness/contrast/saturation/sharpen 0)
 no adjustments apply; each pixel is matched to the nearest color in the
 "sun" palette (how the Pebble Time 2 display actually renders each color),
@@ -16,6 +18,29 @@ matching Pebble color at the same palette index.
 
 Usage (from the repo root):
     uv run --with pillow --with numpy python3 -I tools/convert_images.py
+
+The DEFINED and SUN palettes and the dithering method come from
+Pebble Color Optimizer, used under the MIT License:
+
+    Copyright (c) 2026 czmanix
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 """
 import os
 import sys

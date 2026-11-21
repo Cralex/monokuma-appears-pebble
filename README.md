@@ -38,5 +38,7 @@ The script scales each image to 200 px wide and keeps the bottom 172 px. It then
 
 ## Credits
 
-- **Color conversion:** the method in `tools/convert_images.py` comes from the [PhotoWatch image converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html), the settings page of the PhotoWatch watchface by TomHol ([czmanix](https://github.com/czmanix)). That includes the display-simulated color palette and the Atkinson dithering. The script is a Python port of the converter's default settings.
+- **Color conversion:** the method in `tools/convert_images.py` comes from TomHol ([czmanix](https://github.com/czmanix)). That includes the display-simulated color palette and the Atkinson dithering.
+  - [Pebble Color Optimizer](https://github.com/czmanix/pebble-color-optimizer) ([try it live](https://czmanix.github.io/pebble-color-optimizer/)) is the original tool, MIT licensed, © 2026 czmanix.
+  - The [PhotoWatch image converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html), the settings page of TomHol's PhotoWatch watchface, is a later version with more adjustment options. The script is a Python port of that converter's default settings.
 - **Settings page:** [Clay](https://github.com/pebble/clay) by Pebble.
