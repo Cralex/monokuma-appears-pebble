@@ -59,6 +59,12 @@
 #define PERSIST_KEY_SHAKE 0
 #define PERSIST_KEY_FONT  1
 
+// Debug: show every image in order, one every DEBUG_CYCLE_MS once it's fully
+// shown, with the image number (01-16) in place of the time. Set to 0 for
+// normal behavior (random images that change each minute).
+#define DEBUG_CYCLE       1
+#define DEBUG_CYCLE_MS    3000
+
 // ============================================================================
 // STATE
 // ============================================================================
@@ -98,6 +104,9 @@ static GBitmap   *s_fg_bitmap;
 static AppTimer  *s_anim_timer  = NULL;
 static AppTimer  *s_pause_timer = NULL;
 static AppTimer  *s_initial_timer = NULL;
+#if DEBUG_CYCLE
+static AppTimer  *s_debug_timer = NULL;
+#endif
 static WatchState s_state       = STATE_INIT;
 static AfterFade  s_after_fade  = AFTER_NONE;
 static int        s_fg_y        = FG_Y_HIDDEN;
@@ -134,9 +143,13 @@ static void start_slide_down(void);
 
 static void select_and_load_fg(void) {
     int idx;
+#if DEBUG_CYCLE
+    idx = (s_last_fg + 1) % NUM_FG_IMAGES;
+#else
     do {
         idx = rand() % NUM_FG_IMAGES;
     } while (idx == s_last_fg);
+#endif
     s_last_fg = idx;
     if (s_fg_bitmap) {
         gbitmap_destroy(s_fg_bitmap);
@@ -146,6 +159,16 @@ static void select_and_load_fg(void) {
 }
 
 static void update_time(void) {
+#if DEBUG_CYCLE
+    if (s_last_fg >= 0) {
+        int n = s_last_fg + 1;  // 1-16
+        s_time_buf[0] = '0' + n / 10;
+        s_time_buf[1] = '0' + n % 10;
+        s_time_buf[2] = '\0';
+        text_layer_set_text(s_time_layer, s_time_buf);
+        return;
+    }
+#endif
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     if (!t) return;
@@ -198,6 +221,15 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 
 static void pause_timer_callback(void *data);
 
+#if DEBUG_CYCLE
+static void debug_timer_callback(void *data) {
+    s_debug_timer = NULL;
+    if (s_state == STATE_SHOWN) {
+        start_fade_out(AFTER_SLIDE_DOWN);
+    }
+}
+#endif
+
 static void anim_timer_callback(void *data) {
     s_anim_timer = NULL;
 
@@ -249,6 +281,10 @@ static void anim_timer_callback(void *data) {
                 if (action == AFTER_SHOW) {
                     s_state = STATE_SHOWN;
                     update_time();
+#if DEBUG_CYCLE
+                    s_debug_timer = app_timer_register(DEBUG_CYCLE_MS,
+                                                       debug_timer_callback, NULL);
+#endif
                     if (!s_clock_appeared) {
                         s_clock_appeared = true;
                         layer_set_hidden(text_layer_get_layer(s_time_layer), false);
@@ -272,6 +308,9 @@ static void anim_timer_callback(void *data) {
 
 static void start_fade_out(AfterFade next) {
     if (s_anim_timer) { app_timer_cancel(s_anim_timer); s_anim_timer = NULL; }
+#if DEBUG_CYCLE
+    if (s_debug_timer) { app_timer_cancel(s_debug_timer); s_debug_timer = NULL; }
+#endif
     s_state = STATE_FADING_OUT;
     s_after_fade = next;
     layer_mark_dirty(s_canvas_layer);
@@ -365,6 +404,9 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
+#if DEBUG_CYCLE
+    return;  // the debug timer drives image changes
+#endif
     int cur_min = tick_time->tm_min;
     if (s_state == STATE_SHOWN && cur_min != s_last_slide_minute) {
         s_last_slide_minute = cur_min;
@@ -412,6 +454,9 @@ static void window_unload(Window *window) {
     if (s_anim_timer)  { app_timer_cancel(s_anim_timer);  s_anim_timer  = NULL; }
     if (s_pause_timer) { app_timer_cancel(s_pause_timer); s_pause_timer = NULL; }
     if (s_initial_timer) { app_timer_cancel(s_initial_timer); s_initial_timer = NULL; }
+#if DEBUG_CYCLE
+    if (s_debug_timer) { app_timer_cancel(s_debug_timer); s_debug_timer = NULL; }
+#endif
     accel_tap_service_unsubscribe();
     tick_timer_service_unsubscribe();
 
