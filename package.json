@@ -18,7 +18,9 @@
       "emery",
       "basalt",
       "chalk",
-      "gabbro"
+      "gabbro",
+      "aplite",
+      "diorite"
     ],
     "watchapp": {
       "watchface": true
@@ -138,7 +140,9 @@
           "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
           "characterRegex": "[0-9:]",
           "targetPlatforms": [
-            "basalt"
+            "basalt",
+            "aplite",
+            "diorite"
           ]
         },
         {

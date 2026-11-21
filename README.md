@@ -1,6 +1,6 @@
 # Monokuma Appears!
 
-A Pebble watchface for the color Pebbles. Monokuma appears over a background in one of 16 poses. On launch, the opening image stays on screen for a random 1–3 seconds before it fades and the clock appears. Shaking or tapping the watch switches to a different image.
+A Pebble watchface for the color and black-and-white Pebbles. Monokuma appears over a background in one of 16 poses. On launch, the opening image stays on screen for a random 1–3 seconds before it fades and the clock appears. Shaking or tapping the watch switches to a different image.
 
 ## Supported watches
 
@@ -10,6 +10,8 @@ A Pebble watchface for the color Pebbles. Monokuma appears over a background in 
 | basalt | Pebble Time, Time Steel | 144×168 | 144×124 | 44 px | 34 px | 32 Bold |
 | chalk | Pebble Time Round | 180×180 round | 142×123 | 57 px | 32 px | 32 Bold |
 | gabbro | Pebble Round 2 | 260×260 round | 212×182 | 78 px | 46 px | 42 |
+| aplite | Pebble, Pebble Steel | 144×168 black and white | 144×124 | 44 px | 34 px | 32 Bold |
+| diorite | Pebble 2 | 144×168 black and white | 144×124 | 44 px | 34 px | 32 Bold |
 
 Every layout is scaled from emery's. Monokuma keeps emery's 200:172 shape on the bottom edge, and the background is scaled by the same factor. On the round watches the clock band is taller, so the time fits inside the circle. The layout constants are in `src/c/main.c`.
 
@@ -26,7 +28,7 @@ To try the settings page in the emulator, run `pebble emu-app-config --emulator 
 
 ```sh
 pebble build
-pebble install --emulator emery   # or basalt, chalk, gabbro
+pebble install --emulator emery   # or basalt, chalk, gabbro, aplite, diorite
 ```
 
 ## Layout
@@ -35,7 +37,7 @@ pebble install --emulator emery   # or basalt, chalk, gabbro
 - `src/pkjs/index.js`: phone-side JS (starts Clay)
 - `src/pkjs/config.js`: Clay settings page definition
 - `resources/fonts/dorblue-font/`: the DorBlue clock font, unchanged from the download, with its license file
-- `resources/images/`: the background and the 16 `front01`–`front16` images in Pebble colors. Emery's files have no suffix; the other platforms' use Pebble's file tags (`front01~basalt.png`)
+- `resources/images/`: the background and the 16 `front01`–`front16` images in Pebble colors. Emery's files have no suffix; the other platforms' use Pebble's file tags (`front01~basalt.png`); aplite and diorite share the `~bw` files
 - `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape with a black outline
 - `resources/images/unscaled/`: full-color originals (the 680×680 foreground images and the 200×228 background)
 - `tools/convert_images.py`: regenerates every platform's `front01`–`front16` and `background1`, plus `menu_icon.png`, straight from the originals
@@ -48,7 +50,7 @@ Edit or replace the originals in `resources/images/unscaled/`, then run:
 uv run --with pillow --with numpy python3 -I tools/convert_images.py
 ```
 
-For each platform, the script zooms each original on its own so Monokuma is as large as possible while staying fully visible: centered, anchored to the bottom edge, with 4 px of space above the head (scaled down on smaller screens). Every size is made from the originals, never from another platform's output. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color.
+For each platform, the script zooms each original on its own so Monokuma is as large as possible while staying fully visible: centered, anchored to the bottom edge, with 4 px of space above the head (scaled down on smaller screens). Every size is made from the originals, never from another platform's output. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color. For the black-and-white watches it instead turns the image gray using the converter's saturation formula at −100, then applies the same Atkinson dithering to pure black and white, the only two shades those screens show. Their switcher icon is the black shape with a white outline, so it shows on both white rows and the black highlight.
 
 ## Credits
 

@@ -9,7 +9,8 @@
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 shape and sits on the bottom edge; the clock is centered in the
 // band above it. Keep FG sizes in sync with tools/convert_images.py.
-#if defined(PBL_PLATFORM_BASALT)        // 144x168
+#if defined(PBL_PLATFORM_BASALT) || defined(PBL_PLATFORM_APLITE) || \
+    defined(PBL_PLATFORM_DIORITE)       // 144x168 (aplite/diorite: B&W)
 #define FG_X              0
 #define FG_W              144
 #define FG_H              124

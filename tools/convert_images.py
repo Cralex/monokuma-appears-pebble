@@ -64,6 +64,9 @@ PLATFORMS = {
     "basalt": {"screen": (144, 168), "fg": (144, 124), "suffix": "~basalt"},
     "chalk":  {"screen": (180, 180), "fg": (142, 123), "suffix": "~chalk"},
     "gabbro": {"screen": (260, 260), "fg": (212, 182), "suffix": "~gabbro"},
+    # aplite and diorite: 144x168 black and white, basalt's layout.
+    "bw":     {"screen": (144, 168), "fg": (144, 124), "suffix": "~bw",
+               "bw": True},
 }
 EMERY_FG_W = 200
 NUM_IMAGES = 16
@@ -154,7 +157,7 @@ def scale(src, fg_w, fg_h):
     return padded.resize((fg_w, fg_h), Image.LANCZOS, box=box)
 
 
-def convert(img):
+def convert_color(img):
     """Atkinson-dither against SUN, output DEFINED colors (palette mode)."""
     sun = np.array(SUN, dtype=np.float64)
     work = np.asarray(img, dtype=np.float64).copy()
@@ -174,6 +177,32 @@ def convert(img):
     out = Image.fromarray(idx, mode="P")
     out.putpalette([c for rgb in DEFINED for c in rgb])
     return out
+
+
+def convert_bw(img):
+    """Black-and-white version for aplite and diorite.
+
+    Grayscale with the converter's saturation formula at -100 (its luminance
+    weights), then Atkinson-dither to pure black and white, the only two
+    shades those screens show.
+    """
+    rgb = np.asarray(img, dtype=np.float64)
+    work = rgb @ np.array([0.2989, 0.5870, 0.1140])
+    h, w = work.shape
+    out = np.zeros((h, w), dtype=np.uint8)
+    for y in range(h):
+        for x in range(w):
+            v = work[y, x]
+            level = 255.0 if v >= 128 else 0.0
+            out[y, x] = 1 if level else 0
+            err = (v - level) * 0.125
+            for dx, dy in ATKINSON:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and ny < h:
+                    work[ny, nx] += err
+    img = Image.fromarray(out, mode="P")
+    img.putpalette([0, 0, 0, 255, 255, 255])
+    return img
 
 
 def flatten(src):
@@ -265,6 +294,7 @@ def main():
     for platform, spec in PLATFORMS.items():
         fg_w, fg_h = spec["fg"]
         suffix = spec["suffix"]
+        convert = convert_bw if spec.get("bw") else convert_color
         for n in range(1, NUM_IMAGES + 1):
             src = Image.open(os.path.join(unscaled, f"front{n:02d}.png"))
             out = f"front{n:02d}{suffix}.png"
@@ -277,6 +307,18 @@ def main():
 
     menu_icon(bg).save(os.path.join(images, "menu_icon.png"), optimize=True)
     print("wrote menu_icon.png")
+
+    # Black-and-white screens: black shape with a white outline and hard
+    # edges, so it shows on both the white rows and the black highlight.
+    icon = np.asarray(menu_icon(bg, outline=True))
+    solid = icon[..., 3] >= 128
+    ring = solid & (icon[..., 0] < 64)       # the outline is black in color
+    bw = np.zeros(icon.shape, dtype=np.uint8)
+    bw[ring, :3] = 255
+    bw[..., 3] = solid * 255
+    bw_icon = Image.fromarray(bw, mode="RGBA")
+    bw_icon.save(os.path.join(images, "menu_icon~bw.png"), optimize=True)
+    print("wrote menu_icon~bw.png")
 
 
 if __name__ == "__main__":
