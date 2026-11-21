@@ -47,12 +47,13 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 FG_W, FG_H = 200, 172
 NUM_IMAGES = 16
 BG_W, BG_H = 200, 228   # background is full screen, used unscaled
 ICON_SIZE = 25          # SDK maximum for menuIcon resources
+ICON_OUTLINE = False    # ring the switcher icon in black for contrast
 TOP_MARGIN = 4          # px of black kept above Monokuma's head
 SUBJECT_THRESHOLD = 24  # pixels brighter than this count as Monokuma
 
@@ -171,13 +172,15 @@ def red_mask(img):
     return (a[..., 0] > 2 * a[..., 1] + 40) & (a[..., 0] > 2 * a[..., 2] + 40)
 
 
-def menu_icon(bg):
+def menu_icon(bg, outline=ICON_OUTLINE):
     """Build the launcher icon from the background's red shape.
 
     The shape is cropped, scaled to fit ICON_SIZE x ICON_SIZE, and centered
     on a transparent square. Edges are anti-aliased with Pebble's four alpha
     levels. The fill is the Pebble color the converter picks for the
-    original's average red.
+    original's average red. With outline=True the shape is shrunk by 1 px on
+    each side and ringed in black so it stays visible on the switcher's
+    colored highlight.
     """
     flat = flatten(bg)
     mask = red_mask(flat)
@@ -188,7 +191,8 @@ def menu_icon(bg):
     avg = np.asarray(flat, dtype=np.float64)[mask].mean(axis=0)
     fill = DEFINED[int(np.argmin(((sun - avg) ** 2).sum(axis=1)))]
 
-    zoom = ICON_SIZE / max(x1 - x0, y1 - y0)
+    room = ICON_SIZE - 2 if outline else ICON_SIZE
+    zoom = room / max(x1 - x0, y1 - y0)
     w = max(1, round((x1 - x0) * zoom))
     h = max(1, round((y1 - y0) * zoom))
     shape = Image.fromarray((mask * 255).astype(np.uint8)).crop((x0, y0, x1, y1))
@@ -198,7 +202,19 @@ def menu_icon(bg):
     icon = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), fill + (0,))
     layer = Image.new("RGBA", (w, h), fill + (255,))
     layer.putalpha(Image.fromarray(alpha))
-    icon.paste(layer, ((ICON_SIZE - w) // 2, (ICON_SIZE - h) // 2))
+    pos = ((ICON_SIZE - w) // 2, (ICON_SIZE - h) // 2)
+    if outline:
+        # Black ring: the shape's alpha grown by 1 px in every direction.
+        ring = Image.fromarray(alpha).filter(ImageFilter.MaxFilter(3))
+        black = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+        full = Image.new("L", (ICON_SIZE, ICON_SIZE), 0)
+        full.paste(ring, pos)
+        black.putalpha(full)
+        icon = black
+    icon.alpha_composite(layer, pos)
+    # Round to the four alpha levels Pebble supports.
+    quantized = (np.round(np.asarray(icon.getchannel("A")) / 85) * 85)
+    icon.putalpha(Image.fromarray(quantized.astype(np.uint8)))
     return icon
 
 
