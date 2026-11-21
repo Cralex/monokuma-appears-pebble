@@ -35,3 +35,8 @@ uv run --with pillow --with numpy python3 -I tools/convert_images.py
 ```
 
 The script scales each image to 200 px wide and keeps the bottom 172 px. It then converts the colors the same way as the [TomHol PhotoWatch converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html) does with its default settings: Atkinson dithering against how the Pebble Time 2 display actually renders each color.
+
+## Credits
+
+- **Color conversion:** the method in `tools/convert_images.py` comes from the [PhotoWatch image converter](https://github.com/czmanix/tomhol-configs/blob/main/photowatch/index.html), the settings page of the PhotoWatch watchface by TomHol ([czmanix](https://github.com/czmanix)). That includes the display-simulated color palette and the Atkinson dithering. The script is a Python port of the converter's default settings.
+- **Settings page:** [Clay](https://github.com/pebble/clay) by Pebble.
