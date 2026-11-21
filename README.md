@@ -40,6 +40,7 @@ pebble install --emulator emery   # or basalt, chalk, gabbro, aplite, diorite
 - `resources/images/`: the background and the 16 `front01`–`front16` images in Pebble colors. Emery's files have no suffix; the other platforms' use Pebble's file tags (`front01~basalt.png`); aplite and diorite share the `~bw` files
 - `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape with a black outline
 - `resources/images/unscaled/`: full-color originals (the 680×680 foreground images and the 200×228 background)
+- `screenshots/<platform>/`: emulator screenshots for each platform (the opening screen, then three poses at 10:09), color-corrected to match the real screens; `raw/` has the exact pixels
 - `tools/convert_images.py`: regenerates every platform's `front01`–`front16` and `background1`, plus `menu_icon.png`, straight from the originals
 
 ## Updating the images
