@@ -23,7 +23,7 @@ pebble install --emulator emery
 - `src/pkjs/index.js`: phone-side JS (starts Clay)
 - `src/pkjs/config.js`: Clay settings page definition
 - `resources/images/`: background and the 16 `front01`–`front16` images (200×172, Pebble colors)
-- `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape
+- `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape with a black outline
 - `resources/images/unscaled/`: full-color originals (the 680×680 foreground images and the 200×228 background)
 - `tools/convert_images.py`: regenerates `front01`–`front16`, `background1.png` and `menu_icon.png` from the originals
 

@@ -53,7 +53,7 @@ FG_W, FG_H = 200, 172
 NUM_IMAGES = 16
 BG_W, BG_H = 200, 228   # background is full screen, used unscaled
 ICON_SIZE = 25          # SDK maximum for menuIcon resources
-ICON_OUTLINE = False    # ring the switcher icon in black for contrast
+ICON_OUTLINE = True     # ring the switcher icon in black for contrast
 TOP_MARGIN = 4          # px of black kept above Monokuma's head
 SUBJECT_THRESHOLD = 24  # pixels brighter than this count as Monokuma
 
