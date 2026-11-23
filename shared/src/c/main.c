@@ -145,17 +145,17 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
         // Draw full background image
         graphics_context_set_compositing_mode(ctx, GCompOpAssign);
         graphics_draw_bitmap_in_rect(ctx, s_bg_bitmap, bounds);
-        // Overlay black scanline stripes to simulate fade
+        // Overlay BG_COLOR scanline stripes to simulate fade
         if (s_bg_alpha < FADE_MAX) {
-            int black_rows = FADE_MAX - s_bg_alpha;
-            graphics_context_set_fill_color(ctx, GColorBlack);
+            int stripe_rows = FADE_MAX - s_bg_alpha;
+            graphics_context_set_fill_color(ctx, BG_COLOR);
             for (int y = 0; y < bounds.size.h; y += FADE_MAX) {
-                graphics_fill_rect(ctx, GRect(0, y, bounds.size.w, black_rows),
+                graphics_fill_rect(ctx, GRect(0, y, bounds.size.w, stripe_rows),
                                    0, GCornerNone);
             }
         }
     } else {
-        graphics_context_set_fill_color(ctx, GColorBlack);
+        graphics_context_set_fill_color(ctx, BG_COLOR);
         graphics_fill_rect(ctx, bounds, 0, GCornerNone);
     }
 
@@ -389,7 +389,7 @@ static void window_load(Window *window) {
         resource_get_handle(CUSTOM_FONT_RES));
     s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, CLOCK_H));
     text_layer_set_background_color(s_time_layer, GColorClear);
-    text_layer_set_text_color(s_time_layer, GColorWhite);
+    text_layer_set_text_color(s_time_layer, CLOCK_COLOR);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     layer_set_hidden(text_layer_get_layer(s_time_layer), true);
     layer_add_child(root, text_layer_get_layer(s_time_layer));
@@ -436,7 +436,7 @@ static void init(void) {
     app_message_open(64, 64);
 
     s_window = window_create();
-    window_set_background_color(s_window, GColorBlack);
+    window_set_background_color(s_window, BG_COLOR);
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
         .unload = window_unload,

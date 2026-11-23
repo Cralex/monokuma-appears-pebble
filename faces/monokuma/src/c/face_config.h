@@ -15,6 +15,11 @@
     RESOURCE_ID_IMAGE_FRONT_15, RESOURCE_ID_IMAGE_FRONT_16, \
 }
 
+// Colors: the screen behind the images (also what the background fades to)
+// and the clock digits.
+#define BG_COLOR          GColorBlack
+#define CLOCK_COLOR       GColorWhite
+
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 shape and sits on the bottom edge; the clock is centered in the
 // band above it. Keep FG sizes in sync with shared/tools/convert_images.py.

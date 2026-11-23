@@ -30,6 +30,16 @@ matching Pebble color at the same palette index.
 Usage (from the repo root):
     uv run --with pillow --with numpy python3 -I shared/tools/convert_images.py faces/<face>
 
+A face can have a faces/<face>/convert.json; every key is optional:
+    "background_color": [r, g, b]  the face's background, a Pebble color
+        (the face's BG_COLOR). Transparent parts of background1.png and of
+        the foregrounds are filled with how that color looks on the display,
+        so it comes out as that exact color. Default: black.
+    "bw_background_gray": 0-255  the same for black-and-white watches.
+        Default: black.
+Without background1.png's red shape, the menu icon comes from
+unscaled/menu_icon.png (an RGBA image of any size) instead.
+
 The DEFINED and SUN palettes and the dithering method come from
 Pebble Color Optimizer, used under the MIT License:
 
@@ -53,6 +63,7 @@ Pebble Color Optimizer, used under the MIT License:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 """
+import json
 import os
 import sys
 
@@ -122,19 +133,17 @@ SUN = [
 ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
 
 
-def scale(src, fg_w, fg_h):
-    """Flatten onto black and zoom each image so the character fills the frame.
+def scale(src, fg_w, fg_h, fill=(0, 0, 0)):
+    """Flatten onto `fill` and zoom each image so the character fills the frame.
 
     Finds the box around everything brighter than the black background,
     then picks the largest zoom that fits that box in fg_w x fg_h with
     TOP_MARGIN px (scaled from emery) above it, centered on the character horizontally and anchored
-    to the bottom edge. Areas outside the original are filled with black.
+    to the bottom edge. Areas outside the original are filled with `fill`.
+    The character is found on a black background whatever `fill` is.
     """
-    rgba = src.convert("RGBA")
-    flat = Image.new("RGB", rgba.size, (0, 0, 0))
-    flat.paste(rgba, mask=rgba.getchannel("A"))
-
-    mask = np.asarray(flat).max(axis=2) > SUBJECT_THRESHOLD
+    mask = np.asarray(flatten(src)).max(axis=2) > SUBJECT_THRESHOLD
+    flat = flatten(src, fill)
     ys, xs = np.nonzero(mask)
     if len(xs) == 0:
         sys.exit("image has no visible subject")
@@ -151,9 +160,10 @@ def scale(src, fg_w, fg_h):
         left = (flat.width - crop_w) / 2
     top = y1 - crop_h
 
-    # Pad with black so a crop box past the image edges still works.
+    # Pad so a crop box past the image edges still works.
     pad = int(max(-left, -top, 0)) + 1
-    padded = Image.new("RGB", (flat.width + 2 * pad, flat.height + 2 * pad))
+    padded = Image.new("RGB", (flat.width + 2 * pad, flat.height + 2 * pad),
+                       fill)
     padded.paste(flat, (pad, pad))
     box = (left + pad, top + pad, left + crop_w + pad, y1 + pad)
     return padded.resize((fg_w, fg_h), Image.LANCZOS, box=box)
@@ -207,9 +217,9 @@ def convert_bw(img):
     return img
 
 
-def flatten(src):
+def flatten(src, fill=(0, 0, 0)):
     rgba = src.convert("RGBA")
-    flat = Image.new("RGB", rgba.size, (0, 0, 0))
+    flat = Image.new("RGB", rgba.size, fill)
     flat.paste(rgba, mask=rgba.getchannel("A"))
     return flat
 
@@ -269,6 +279,49 @@ def menu_icon(bg, outline=ICON_OUTLINE):
     return icon
 
 
+def image_icon(src):
+    """Build the launcher icons from an RGBA image (unscaled/menu_icon.png).
+
+    Returns (color, bw). The color icon is the image fitted into
+    ICON_SIZE x ICON_SIZE, each pixel set to the Pebble color that looks
+    closest on the display (no dithering at this size), with Pebble's four
+    alpha levels. The black-and-white icon is the image's silhouette in
+    black, 1 px smaller on each side, ringed in white so it shows on both
+    the white rows and the black highlight.
+    """
+    src = src.convert("RGBA")
+    box = src.getbbox()
+    if box is None:
+        sys.exit("menu_icon.png is fully transparent")
+    src = src.crop(box)
+
+    def fit(room):
+        zoom = room / max(src.size)
+        w = max(1, round(src.width * zoom))
+        h = max(1, round(src.height * zoom))
+        small = src.convert("RGBa").resize((w, h), Image.LANCZOS).convert("RGBA")
+        icon = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+        icon.paste(small, ((ICON_SIZE - w) // 2, (ICON_SIZE - h) // 2))
+        return np.asarray(icon)
+
+    a = fit(ICON_SIZE)
+    sun = np.array(SUN, dtype=np.float64)
+    rgb = a[..., :3].reshape(-1, 1, 3).astype(np.float64)
+    idx = ((rgb - sun) ** 2).sum(axis=2).argmin(axis=1)
+    out = np.zeros(a.shape, dtype=np.uint8)
+    out[..., :3] = np.array(DEFINED, dtype=np.uint8)[idx].reshape(a.shape[:2] + (3,))
+    out[..., 3] = (np.round(a[..., 3] / 85) * 85).astype(np.uint8)
+    color = Image.fromarray(out, mode="RGBA")
+
+    solid = fit(ICON_SIZE - 2)[..., 3] >= 128
+    ring = np.asarray(Image.fromarray(solid.astype(np.uint8) * 255)
+                      .filter(ImageFilter.MaxFilter(3))) > 0
+    bw = np.zeros(a.shape, dtype=np.uint8)
+    bw[ring & ~solid, :3] = 255
+    bw[..., 3] = ring * 255
+    return color, Image.fromarray(bw, mode="RGBA")
+
+
 def place_background(bg, screen, fg_w):
     """Scale the emery background like the foreground and fit it to a screen.
 
@@ -290,7 +343,8 @@ def place_background(bg, screen, fg_w):
 def main():
     if len(sys.argv) != 2:
         sys.exit("usage: convert_images.py faces/<face>")
-    images = os.path.join(sys.argv[1], "resources", "images")
+    face = sys.argv[1]
+    images = os.path.join(face, "resources", "images")
     unscaled = os.path.join(images, "unscaled")
     if not os.path.isdir(unscaled):
         sys.exit(f"no originals folder: {unscaled}")
@@ -301,6 +355,21 @@ def main():
     if num_images == 0:
         sys.exit(f"no front01.png in {unscaled}")
 
+    config = {}
+    config_path = os.path.join(face, "convert.json")
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            config = json.load(f)
+    color_fill = (0, 0, 0)
+    if "background_color" in config:
+        c = tuple(config["background_color"])
+        if c not in DEFINED:
+            sys.exit(f"background_color {list(c)} is not a Pebble color")
+        # How it looks on the display, so it converts back to exactly c.
+        color_fill = SUN[DEFINED.index(c)]
+    gray = config.get("bw_background_gray", 0)
+    bw_fill = (gray, gray, gray)
+
     bg = Image.open(os.path.join(unscaled, "background1.png"))
     if bg.size != (BG_W, BG_H):
         sys.exit(f"background1.png must be {BG_W}x{BG_H}, got {bg.size}")
@@ -309,13 +378,14 @@ def main():
         fg_w, fg_h = spec["fg"]
         suffix = spec["suffix"]
         convert = convert_bw if spec.get("bw") else convert_color
+        fill = bw_fill if spec.get("bw") else color_fill
         for n in range(1, num_images + 1):
             src = Image.open(os.path.join(unscaled, f"front{n:02d}.png"))
             out = f"front{n:02d}{suffix}.png"
-            convert(scale(src, fg_w, fg_h)).save(os.path.join(images, out),
-                                                 optimize=True)
+            convert(scale(src, fg_w, fg_h, fill)).save(
+                os.path.join(images, out), optimize=True)
         out = f"background1{suffix}.png"
-        placed = place_background(bg, spec["screen"], fg_w)
+        placed = place_background(flatten(bg, fill), spec["screen"], fg_w)
         if spec.get("bw"):
             # The dark red would dither to a few faint dots; draw the shape
             # as mid-gray instead so it reads clearly.
@@ -325,6 +395,14 @@ def main():
         convert(placed).save(
             os.path.join(images, out), optimize=True)
         print(f"wrote {platform}: {num_images} foregrounds and {out}")
+
+    icon_src = os.path.join(unscaled, "menu_icon.png")
+    if os.path.exists(icon_src):
+        color, bw_icon = image_icon(Image.open(icon_src))
+        color.save(os.path.join(images, "menu_icon.png"), optimize=True)
+        bw_icon.save(os.path.join(images, "menu_icon~bw.png"), optimize=True)
+        print("wrote menu_icon.png and menu_icon~bw.png from unscaled/menu_icon.png")
+        return
 
     menu_icon(bg).save(os.path.join(images, "menu_icon.png"), optimize=True)
     print("wrote menu_icon.png")

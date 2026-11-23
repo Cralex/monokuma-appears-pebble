@@ -10,6 +10,11 @@
     RESOURCE_ID_IMAGE_FRONT_03, RESOURCE_ID_IMAGE_FRONT_04, \
 }
 
+// Colors: the screen behind the images (also what the background fades to)
+// and the clock digits. BG_COLOR must match convert.json's colors.
+#define BG_COLOR          PBL_IF_COLOR_ELSE(GColorBrilliantRose, GColorWhite)
+#define CLOCK_COLOR       GColorBlack
+
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 shape and sits on the bottom edge; the clock is centered in the
 // band above it. Keep FG sizes in sync with shared/tools/convert_images.py.
