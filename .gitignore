@@ -6,4 +6,4 @@ node_modules/
 __pycache__/
 
 # Fonts without a license that allows redistribution
-resources/fonts/goodbyeDespair.ttf
+faces/monokuma/resources/fonts/goodbyeDespair.ttf

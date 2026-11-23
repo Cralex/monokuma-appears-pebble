@@ -4,49 +4,9 @@
 // CONSTANTS
 // ============================================================================
 
-#define NUM_FG_IMAGES     16
-
-// Per-platform layout, scaled from emery's. The foreground keeps emery's
-// 200:172 shape and sits on the bottom edge; the clock is centered in the
-// band above it. Keep FG sizes in sync with tools/convert_images.py.
-#if defined(PBL_PLATFORM_BASALT) || defined(PBL_PLATFORM_APLITE) || \
-    defined(PBL_PLATFORM_DIORITE)       // 144x168 (aplite/diorite: B&W)
-#define FG_X              0
-#define FG_W              144
-#define FG_H              124
-#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_34
-#define DORBLUE_Y         -1
-#define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
-#define LECO_Y            2
-#define SLIDE_STEP        9
-#elif defined(PBL_PLATFORM_CHALK)       // 180x180 round
-#define FG_X              19
-#define FG_W              142
-#define FG_H              123
-#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_32
-#define DORBLUE_Y         15
-#define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
-#define LECO_Y            16
-#define SLIDE_STEP        9
-#elif defined(PBL_PLATFORM_GABBRO)      // 260x260 round
-#define FG_X              24
-#define FG_W              212
-#define FG_H              182
-#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_46
-#define DORBLUE_Y         20
-#define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
-#define LECO_Y            24
-#define SLIDE_STEP        13
-#else                                   // emery, 200x228
-#define FG_X              0
-#define FG_W              200
-#define FG_H              172
-#define DORBLUE_RES       RESOURCE_ID_FONT_DORBLUE_48
-#define DORBLUE_Y         -5    // nudges DorBlue to center it in the clock band
-#define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
-#define LECO_Y            0
-#define SLIDE_STEP        12    // pixels per frame
-#endif
+// Face-specific settings: image count and resource IDs, per-platform layout
+// and clock font. Each face provides its own in faces/<name>/src/c/.
+#include "face_config.h"
 
 #define SCREEN_H          PBL_DISPLAY_HEIGHT
 #define FG_Y_SHOWN        (SCREEN_H - FG_H)
@@ -61,7 +21,7 @@
 #define PERSIST_KEY_FONT  1
 
 // Debug: show every image in order, one every DEBUG_CYCLE_MS once it's fully
-// shown, with the image number (01-16) in place of the time. Set to 0 for
+// shown, with the image number (01-NN) in place of the time. Set to 0 for
 // normal behavior (random images that change each minute).
 #define DEBUG_CYCLE       0
 #define DEBUG_CYCLE_MS    3000
@@ -92,14 +52,14 @@ typedef enum {
 static Window    *s_window;
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
-static GFont      s_dorblue_font;
+static GFont      s_custom_font;
 
 // Clock fonts offered in the settings; values match config.js.
 typedef enum {
-    CLOCK_FONT_DORBLUE = 0,
+    CLOCK_FONT_CUSTOM = 0,
     CLOCK_FONT_LECO    = 1,
 } ClockFont;
-static ClockFont  s_clock_font  = CLOCK_FONT_DORBLUE;
+static ClockFont  s_clock_font  = CLOCK_FONT_CUSTOM;
 static GBitmap   *s_bg_bitmap;
 static GBitmap   *s_fg_bitmap;
 static AppTimer  *s_anim_timer  = NULL;
@@ -118,16 +78,7 @@ static bool       s_shake_enabled   = true;
 static int        s_last_slide_minute = -1;
 static char       s_time_buf[6];
 
-static const uint32_t s_fg_res_ids[NUM_FG_IMAGES] = {
-    RESOURCE_ID_IMAGE_FRONT_01, RESOURCE_ID_IMAGE_FRONT_02,
-    RESOURCE_ID_IMAGE_FRONT_03, RESOURCE_ID_IMAGE_FRONT_04,
-    RESOURCE_ID_IMAGE_FRONT_05, RESOURCE_ID_IMAGE_FRONT_06,
-    RESOURCE_ID_IMAGE_FRONT_07, RESOURCE_ID_IMAGE_FRONT_08,
-    RESOURCE_ID_IMAGE_FRONT_09, RESOURCE_ID_IMAGE_FRONT_10,
-    RESOURCE_ID_IMAGE_FRONT_11, RESOURCE_ID_IMAGE_FRONT_12,
-    RESOURCE_ID_IMAGE_FRONT_13, RESOURCE_ID_IMAGE_FRONT_14,
-    RESOURCE_ID_IMAGE_FRONT_15, RESOURCE_ID_IMAGE_FRONT_16,
-};
+static const uint32_t s_fg_res_ids[NUM_FG_IMAGES] = FG_RES_IDS;
 
 // ============================================================================
 // FORWARD DECLARATIONS
@@ -162,7 +113,7 @@ static void select_and_load_fg(void) {
 static void update_time(void) {
 #if DEBUG_CYCLE
     if (s_last_fg >= 0) {
-        int n = s_last_fg + 1;  // 1-16
+        int n = s_last_fg + 1;  // 1-NUM_FG_IMAGES
         s_time_buf[0] = '0' + n / 10;
         s_time_buf[1] = '0' + n % 10;
         s_time_buf[2] = '\0';
@@ -370,9 +321,9 @@ static void apply_clock_font(void) {
         frame.origin.y = LECO_Y;
         frame.size.h = CLOCK_H - LECO_Y;
     } else {
-        text_layer_set_font(s_time_layer, s_dorblue_font);
-        frame.origin.y = DORBLUE_Y;
-        frame.size.h = CLOCK_H - DORBLUE_Y;
+        text_layer_set_font(s_time_layer, s_custom_font);
+        frame.origin.y = CUSTOM_FONT_Y;
+        frame.size.h = CLOCK_H - CUSTOM_FONT_Y;
     }
     layer_set_frame(layer, frame);
 }
@@ -386,7 +337,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     Tuple *font = dict_find(iter, MESSAGE_KEY_CLOCK_FONT);
     if (font) {
         int32_t v = tuple_int(font);
-        s_clock_font = (v == CLOCK_FONT_LECO) ? CLOCK_FONT_LECO : CLOCK_FONT_DORBLUE;
+        s_clock_font = (v == CLOCK_FONT_LECO) ? CLOCK_FONT_LECO : CLOCK_FONT_CUSTOM;
         persist_write_int(PERSIST_KEY_FONT, s_clock_font);
         apply_clock_font();
     }
@@ -434,8 +385,8 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_canvas_layer, canvas_update_proc);
     layer_add_child(root, s_canvas_layer);
 
-    s_dorblue_font = fonts_load_custom_font(
-        resource_get_handle(DORBLUE_RES));
+    s_custom_font = fonts_load_custom_font(
+        resource_get_handle(CUSTOM_FONT_RES));
     s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, CLOCK_H));
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_color(s_time_layer, GColorWhite);
@@ -462,7 +413,7 @@ static void window_unload(Window *window) {
     tick_timer_service_unsubscribe();
 
     if (s_time_layer)  { text_layer_destroy(s_time_layer);  s_time_layer  = NULL; }
-    if (s_dorblue_font) { fonts_unload_custom_font(s_dorblue_font); s_dorblue_font = NULL; }
+    if (s_custom_font) { fonts_unload_custom_font(s_custom_font); s_custom_font = NULL; }
     if (s_canvas_layer){ layer_destroy(s_canvas_layer);     s_canvas_layer = NULL; }
     if (s_fg_bitmap)   { gbitmap_destroy(s_fg_bitmap);      s_fg_bitmap   = NULL; }
     if (s_bg_bitmap)   { gbitmap_destroy(s_bg_bitmap);      s_bg_bitmap   = NULL; }
@@ -476,7 +427,7 @@ static void init(void) {
     srand(time(NULL));
 
     s_clock_font = (persist_read_int(PERSIST_KEY_FONT) == CLOCK_FONT_LECO)
-                   ? CLOCK_FONT_LECO : CLOCK_FONT_DORBLUE;
+                   ? CLOCK_FONT_LECO : CLOCK_FONT_CUSTOM;
     s_shake_enabled = persist_exists(PERSIST_KEY_SHAKE)
                       ? persist_read_bool(PERSIST_KEY_SHAKE)
                       : true;

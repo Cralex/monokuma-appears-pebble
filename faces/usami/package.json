@@ -1,0 +1,109 @@
+{
+  "name": "usami",
+  "author": "Cralex",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.1.0"
+  },
+  "pebble": {
+    "displayName": "Usami Appears!",
+    "uuid": "62c7bf07-4063-4c85-93cd-a357567144a3",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "basalt",
+      "chalk",
+      "gabbro",
+      "aplite",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": [
+      "CLOCK_FONT",
+      "SHAKE_ENABLED"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "IMAGE_MENU_ICON",
+          "file": "images/menu_icon.png",
+          "menuIcon": true
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_BACKGROUND",
+          "file": "images/background1.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_01",
+          "file": "images/front01.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_02",
+          "file": "images/front02.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_03",
+          "file": "images/front03.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_04",
+          "file": "images/front04.png"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_48",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "emery"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_34",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "basalt",
+            "aplite",
+            "diorite"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_32",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "chalk"
+          ]
+        },
+        {
+          "type": "font",
+          "name": "FONT_DORBLUE_46",
+          "file": "fonts/dorblue-font/Dorblue-vzE.ttf",
+          "characterRegex": "[0-9:]",
+          "targetPlatforms": [
+            "gabbro"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,5 +1,10 @@
 import os.path
 
+# A face: its own package.json (UUID, name, resources), resources/,
+# src/c/face_config.h and src/pkjs/. The watchface engine is shared by
+# every face and lives in ../../shared/src/c.
+SHARED_C = '../../shared/src/c'
+
 top = '.'
 out = 'build'
 
@@ -18,8 +23,10 @@ def build(ctx):
         ctx.env = ctx.all_envs[platform]
         ctx.set_group(ctx.env.PLATFORM_NAME)
         app_elf = '{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
-        ctx.pbl_build(source=ctx.path.ant_glob('src/c/**/*.c'),
-                      target=app_elf, bin_type='app')
+        sources = (ctx.path.ant_glob('src/c/**/*.c') +
+                   ctx.path.find_dir(SHARED_C).ant_glob('**/*.c'))
+        ctx.pbl_build(source=sources, target=app_elf, bin_type='app',
+                      includes=['src/c'])
         if build_worker:
             worker_elf = '{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
             binaries.append({'platform': platform, 'app_elf': app_elf,

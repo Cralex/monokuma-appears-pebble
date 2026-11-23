@@ -1,7 +1,9 @@
 """Scale and color-convert the watchface images for each color platform.
 
-Reads the full-color originals in resources/images/unscaled/ and writes,
-for every platform in PLATFORMS, frontNN.png (Monokuma), background1.png
+Reads a face's full-color originals in faces/<face>/resources/images/unscaled/
+(background1.png and front01.png..frontNN.png) and writes into that face's
+resources/images/, for every platform in PLATFORMS, frontNN.png (the
+character's poses), background1.png
 and, once, menu_icon.png. Emery files have no suffix; other platforms use
 Pebble's file tags (frontNN~basalt.png), which the SDK picks per platform.
 
@@ -10,7 +12,7 @@ platform's output. Layouts follow emery's: the foreground keeps emery's
 200:172 shape, sits on the bottom edge, and the background is scaled by
 the same factor and anchored the same way.
 
-Scaling: each foreground image is zoomed on its own so Monokuma is as large
+Scaling: each foreground image is zoomed on its own so the character is as large
 as possible while staying fully visible (4 px of headroom on emery, scaled
 on other platforms), centered horizontally and anchored to the bottom edge,
 where it slides in.
@@ -26,7 +28,7 @@ Atkinson error diffusion spreads the error, and the output gets the
 matching Pebble color at the same palette index.
 
 Usage (from the repo root):
-    uv run --with pillow --with numpy python3 -I tools/convert_images.py
+    uv run --with pillow --with numpy python3 -I shared/tools/convert_images.py faces/<face>
 
 The DEFINED and SUN palettes and the dithering method come from
 Pebble Color Optimizer, used under the MIT License:
@@ -58,7 +60,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 # Screen size, foreground size and file suffix per platform. Keep in sync
-# with the layout constants in src/c/main.c.
+# with the layout constants in each face's src/c/face_config.h.
 PLATFORMS = {
     "emery":  {"screen": (200, 228), "fg": (200, 172), "suffix": ""},
     "basalt": {"screen": (144, 168), "fg": (144, 124), "suffix": "~basalt"},
@@ -69,13 +71,12 @@ PLATFORMS = {
                "bw": True},
 }
 EMERY_FG_W = 200
-NUM_IMAGES = 16
 BG_W, BG_H = 200, 228   # the background original is emery-sized
 BW_SHAPE_GRAY = 128     # B&W screens: gray the red shape is drawn as
 ICON_SIZE = 25          # SDK maximum for menuIcon resources
 ICON_OUTLINE = True     # ring the switcher icon in black for contrast
-TOP_MARGIN = 4          # px of black kept above Monokuma's head
-SUBJECT_THRESHOLD = 24  # pixels brighter than this count as Monokuma
+TOP_MARGIN = 4          # px of black kept above the character's head
+SUBJECT_THRESHOLD = 24  # pixels brighter than this count as the character
 
 # Pebble 64-color palette, in the converter's order ("defined").
 DEFINED = [
@@ -122,11 +123,11 @@ ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
 
 
 def scale(src, fg_w, fg_h):
-    """Flatten onto black and zoom each image so Monokuma fills the frame.
+    """Flatten onto black and zoom each image so the character fills the frame.
 
     Finds the box around everything brighter than the black background,
     then picks the largest zoom that fits that box in fg_w x fg_h with
-    TOP_MARGIN px (scaled from emery) above it, centered on Monokuma horizontally and anchored
+    TOP_MARGIN px (scaled from emery) above it, centered on the character horizontally and anchored
     to the bottom edge. Areas outside the original are filled with black.
     """
     rgba = src.convert("RGBA")
@@ -144,7 +145,7 @@ def scale(src, fg_w, fg_h):
     zoom = min(fg_w / (x1 - x0), (fg_h - margin) / (y1 - y0))
     crop_w, crop_h = fg_w / zoom, fg_h / zoom
     if crop_w <= flat.width:
-        # Center on Monokuma, but don't pan past the image's sides.
+        # Center on the character, but don't pan past the image's sides.
         left = min(max((x0 + x1) / 2 - crop_w / 2, 0), flat.width - crop_w)
     else:
         left = (flat.width - crop_w) / 2
@@ -231,6 +232,9 @@ def menu_icon(bg, outline=ICON_OUTLINE):
     """
     flat = flatten(bg)
     mask = red_mask(flat)
+    if not mask.any():
+        sys.exit("background1.png has no red shape to make the menu icon from "
+                 "(see red_mask)")
     ys, xs = np.nonzero(mask)
     x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
 
@@ -284,9 +288,18 @@ def place_background(bg, screen, fg_w):
 
 
 def main():
-    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-    images = os.path.join(root, "resources", "images")
+    if len(sys.argv) != 2:
+        sys.exit("usage: convert_images.py faces/<face>")
+    images = os.path.join(sys.argv[1], "resources", "images")
     unscaled = os.path.join(images, "unscaled")
+    if not os.path.isdir(unscaled):
+        sys.exit(f"no originals folder: {unscaled}")
+    # front01.png, front02.png, ... with no gaps.
+    num_images = 0
+    while os.path.exists(os.path.join(unscaled, f"front{num_images + 1:02d}.png")):
+        num_images += 1
+    if num_images == 0:
+        sys.exit(f"no front01.png in {unscaled}")
 
     bg = Image.open(os.path.join(unscaled, "background1.png"))
     if bg.size != (BG_W, BG_H):
@@ -296,7 +309,7 @@ def main():
         fg_w, fg_h = spec["fg"]
         suffix = spec["suffix"]
         convert = convert_bw if spec.get("bw") else convert_color
-        for n in range(1, NUM_IMAGES + 1):
+        for n in range(1, num_images + 1):
             src = Image.open(os.path.join(unscaled, f"front{n:02d}.png"))
             out = f"front{n:02d}{suffix}.png"
             convert(scale(src, fg_w, fg_h)).save(os.path.join(images, out),
@@ -311,7 +324,7 @@ def main():
             placed = Image.fromarray(pixels)
         convert(placed).save(
             os.path.join(images, out), optimize=True)
-        print(f"wrote {platform}: {NUM_IMAGES} foregrounds and {out}")
+        print(f"wrote {platform}: {num_images} foregrounds and {out}")
 
     menu_icon(bg).save(os.path.join(images, "menu_icon.png"), optimize=True)
     print("wrote menu_icon.png")
