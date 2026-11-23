@@ -1,6 +1,6 @@
 # Usami Appears!
 
-A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/README.md). It's a work in progress: the poses are numbered placeholders, and the name in `package.json` is provisional.
+A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/README.md). Usami appears in one of 12 poses. The name in `package.json` is provisional.
 
 ## Look
 
@@ -19,16 +19,20 @@ uv run --with pillow python3 -I faces/usami/tools/make_gem.py
 
 Then convert the images (next section).
 
-## Putting in the real poses
+## The poses
 
-1. Replace `front01.png` … `frontNN.png` in `resources/images/unscaled/`. They should have transparent backgrounds, so the tool can set Usami on pink (or white).
-2. From the repo root, run:
+The originals in `resources/images/unscaled/` (`front01.png` … `front12.png`) are full-body sprites with transparent backgrounds, all drawn at the same scale. Unlike Monokuma's, they aren't zoomed one by one: each gets a fixed crop window, the same size for every pose, so Usami is the same size in all of them. The window is placed by the heart brooch on Usami's collar. It runs from just above the ear tips to the top of the skirt, so the skirt is cut off the way Monokuma's originals stop at his belly. A wand raised higher than the ears is cut off at the top (front04), and wing tips can be cut at the sides.
 
-   ```sh
-   uv run --with pillow --with numpy python3 -I shared/tools/convert_images.py faces/usami
-   ```
+`tools/find_crops.py` finds each brooch and writes the windows to `convert.json` (`"crops"`). To show more or less of Usami, change `ABOVE` and `BELOW` at the top of the script.
 
-3. If the number of poses changed, list one `IMAGE_FRONT_NN` bitmap per pose in `package.json`, and update `NUM_FG_IMAGES` and `FG_RES_IDS` in `src/c/face_config.h`.
+After adding or changing poses, run from the repo root:
+
+```sh
+uv run --with pillow --with numpy --with scipy python3 -I faces/usami/tools/find_crops.py
+uv run --with pillow --with numpy python3 -I shared/tools/convert_images.py faces/usami
+```
+
+If the number of poses changed, list one `IMAGE_FRONT_NN` bitmap per pose in `package.json`, and update `NUM_FG_IMAGES` and `FG_RES_IDS` in `src/c/face_config.h`.
 
 ## Build and run
 

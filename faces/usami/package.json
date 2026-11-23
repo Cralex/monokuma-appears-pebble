@@ -66,6 +66,46 @@
           "file": "images/front04.png"
         },
         {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_05",
+          "file": "images/front05.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_06",
+          "file": "images/front06.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_07",
+          "file": "images/front07.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_08",
+          "file": "images/front08.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_09",
+          "file": "images/front09.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_10",
+          "file": "images/front10.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_11",
+          "file": "images/front11.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_FRONT_12",
+          "file": "images/front12.png"
+        },
+        {
           "type": "font",
           "name": "FONT_DORBLUE_48",
           "file": "fonts/dorblue-font/Dorblue-vzE.ttf",

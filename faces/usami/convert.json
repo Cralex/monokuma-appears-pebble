@@ -1,4 +1,70 @@
 {
-  "background_color": [255, 85, 170],
-  "bw_background_gray": 255
+  "background_color": [
+    255,
+    85,
+    170
+  ],
+  "bw_background_gray": 255,
+  "crops": {
+    "front01.png": {
+      "center_x": 441,
+      "top": 26,
+      "bottom": 636
+    },
+    "front02.png": {
+      "center_x": 375,
+      "top": 15,
+      "bottom": 625
+    },
+    "front03.png": {
+      "center_x": 464,
+      "top": -7,
+      "bottom": 603
+    },
+    "front04.png": {
+      "center_x": 386,
+      "top": 173,
+      "bottom": 783
+    },
+    "front05.png": {
+      "center_x": 478,
+      "top": -29,
+      "bottom": 581
+    },
+    "front06.png": {
+      "center_x": 381,
+      "top": -6,
+      "bottom": 604
+    },
+    "front07.png": {
+      "center_x": 377,
+      "top": -5,
+      "bottom": 605
+    },
+    "front08.png": {
+      "center_x": 265,
+      "top": -2,
+      "bottom": 608
+    },
+    "front09.png": {
+      "center_x": 379,
+      "top": 16,
+      "bottom": 626
+    },
+    "front10.png": {
+      "center_x": 451,
+      "top": 38,
+      "bottom": 648
+    },
+    "front11.png": {
+      "center_x": 384,
+      "top": -33,
+      "bottom": 577
+    },
+    "front12.png": {
+      "center_x": 441,
+      "top": 26,
+      "bottom": 636
+    }
+  }
 }

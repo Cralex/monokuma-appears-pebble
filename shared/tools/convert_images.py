@@ -37,6 +37,12 @@ A face can have a faces/<face>/convert.json; every key is optional:
         so it comes out as that exact color. Default: black.
     "bw_background_gray": 0-255  the same for black-and-white watches.
         Default: black.
+    "crops": {"front01.png": {"center_x": x, "top": y0, "bottom": y1}, ...}
+        a fixed view for each listed foreground, in the original's pixels:
+        the rows from top to bottom, centered on center_x, as wide as the
+        platform's foreground shape needs. It replaces the automatic zoom,
+        so a face can show its character at the same size in every pose;
+        anything outside the view is cut off.
 Without background1.png's red shape, the menu icon comes from
 unscaled/menu_icon.png (an RGBA image of any size) instead.
 
@@ -131,6 +137,22 @@ SUN = [
 
 # Atkinson: 1/8 of the error to each of these (dx, dy) neighbors.
 ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
+
+
+def crop_view(src, fg_w, fg_h, fill, view):
+    """Scale a fixed view of src (see "crops" above) to fg_w x fg_h."""
+    flat = flatten(src, fill)
+    top, bottom = view["top"], view["bottom"]
+    crop_w = (bottom - top) * fg_w / fg_h
+    left = view["center_x"] - crop_w / 2
+    # Pad so a view past the image edges still works.
+    pad = int(max(-left, -top, left + crop_w - flat.width,
+                  bottom - flat.height, 0)) + 1
+    padded = Image.new("RGB", (flat.width + 2 * pad, flat.height + 2 * pad),
+                       fill)
+    padded.paste(flat, (pad, pad))
+    box = (left + pad, top + pad, left + crop_w + pad, bottom + pad)
+    return padded.resize((fg_w, fg_h), Image.LANCZOS, box=box)
 
 
 def scale(src, fg_w, fg_h, fill=(0, 0, 0)):
@@ -368,6 +390,7 @@ def main():
         # How it looks on the display, so it converts back to exactly c.
         color_fill = SUN[DEFINED.index(c)]
     gray = config.get("bw_background_gray", 0)
+    crops = config.get("crops", {})
     bw_fill = (gray, gray, gray)
 
     bg = Image.open(os.path.join(unscaled, "background1.png"))
@@ -380,10 +403,14 @@ def main():
         convert = convert_bw if spec.get("bw") else convert_color
         fill = bw_fill if spec.get("bw") else color_fill
         for n in range(1, num_images + 1):
-            src = Image.open(os.path.join(unscaled, f"front{n:02d}.png"))
+            name = f"front{n:02d}.png"
+            src = Image.open(os.path.join(unscaled, name))
+            if name in crops:
+                scaled = crop_view(src, fg_w, fg_h, fill, crops[name])
+            else:
+                scaled = scale(src, fg_w, fg_h, fill)
             out = f"front{n:02d}{suffix}.png"
-            convert(scale(src, fg_w, fg_h, fill)).save(
-                os.path.join(images, out), optimize=True)
+            convert(scaled).save(os.path.join(images, out), optimize=True)
         out = f"background1{suffix}.png"
         placed = place_background(flatten(bg, fill), spec["screen"], fg_w)
         if spec.get("bw"):

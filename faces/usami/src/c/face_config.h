@@ -3,11 +3,14 @@
 // Usami's settings for the shared engine (shared/src/c/main.c).
 
 // Foreground images: IMAGE_FRONT_01..NN in package.json.
-// Placeholder count; update with package.json when the real art is in.
-#define NUM_FG_IMAGES     4
+#define NUM_FG_IMAGES     12
 #define FG_RES_IDS { \
     RESOURCE_ID_IMAGE_FRONT_01, RESOURCE_ID_IMAGE_FRONT_02, \
     RESOURCE_ID_IMAGE_FRONT_03, RESOURCE_ID_IMAGE_FRONT_04, \
+    RESOURCE_ID_IMAGE_FRONT_05, RESOURCE_ID_IMAGE_FRONT_06, \
+    RESOURCE_ID_IMAGE_FRONT_07, RESOURCE_ID_IMAGE_FRONT_08, \
+    RESOURCE_ID_IMAGE_FRONT_09, RESOURCE_ID_IMAGE_FRONT_10, \
+    RESOURCE_ID_IMAGE_FRONT_11, RESOURCE_ID_IMAGE_FRONT_12, \
 }
 
 // Colors: the screen behind the images (also what the background fades to)
