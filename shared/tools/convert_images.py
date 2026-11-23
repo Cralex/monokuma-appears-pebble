@@ -43,6 +43,11 @@ A face can have a faces/<face>/convert.json; every key is optional:
         platform's foreground shape needs. It replaces the automatic zoom,
         so a face can show its character at the same size in every pose;
         anything outside the view is cut off.
+    "extend_into_clock": true  with "crops": a pose with more of the
+        character above its view (a raised wand) keeps it, up to the height
+        of the clock band. That image is taller than the foreground area,
+        and the engine draws the extra rows over the band. The band must be
+        plain background color, so the extra rows can be opaque.
 Without background1.png's red shape, the menu icon comes from
 unscaled/menu_icon.png (an RGBA image of any size) instead.
 
@@ -139,12 +144,27 @@ SUN = [
 ATKINSON = [(1, 0), (2, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]
 
 
-def crop_view(src, fg_w, fg_h, fill, view):
-    """Scale a fixed view of src (see "crops" above) to fg_w x fg_h."""
+def crop_view(src, fg_w, fg_h, fill, view, max_extra=0):
+    """Scale a fixed view of src (see "crops" above) to fg_w x fg_h.
+
+    With max_extra > 0, the result grows upward by up to max_extra rows to
+    keep any part of the character above the view.
+    """
     flat = flatten(src, fill)
     top, bottom = view["top"], view["bottom"]
+    zoom = fg_h / (bottom - top)
     crop_w = (bottom - top) * fg_w / fg_h
     left = view["center_x"] - crop_w / 2
+    out_h = fg_h
+    if max_extra > 0:
+        # Highest visible pixel of the character within the view's columns.
+        alpha = np.asarray(src.convert("RGBA").getchannel("A"))
+        x0, x1 = max(0, int(left)), min(src.width, int(left + crop_w) + 1)
+        rows = np.nonzero((alpha[:, x0:x1] > 64).any(axis=1))[0]
+        if len(rows) and rows[0] < top:
+            extra = min(max_extra, int(np.ceil((top - rows[0]) * zoom)) + 1)
+            out_h = fg_h + extra
+            top -= extra / zoom
     # Pad so a view past the image edges still works.
     pad = int(max(-left, -top, left + crop_w - flat.width,
                   bottom - flat.height, 0)) + 1
@@ -152,7 +172,7 @@ def crop_view(src, fg_w, fg_h, fill, view):
                        fill)
     padded.paste(flat, (pad, pad))
     box = (left + pad, top + pad, left + crop_w + pad, bottom + pad)
-    return padded.resize((fg_w, fg_h), Image.LANCZOS, box=box)
+    return padded.resize((fg_w, out_h), Image.LANCZOS, box=box)
 
 
 def scale(src, fg_w, fg_h, fill=(0, 0, 0)):
@@ -406,7 +426,10 @@ def main():
             name = f"front{n:02d}.png"
             src = Image.open(os.path.join(unscaled, name))
             if name in crops:
-                scaled = crop_view(src, fg_w, fg_h, fill, crops[name])
+                max_extra = (spec["screen"][1] - fg_h
+                             if config.get("extend_into_clock") else 0)
+                scaled = crop_view(src, fg_w, fg_h, fill, crops[name],
+                                   max_extra)
             else:
                 scaled = scale(src, fg_w, fg_h, fill)
             out = f"front{n:02d}{suffix}.png"

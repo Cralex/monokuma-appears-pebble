@@ -5,6 +5,7 @@
     170
   ],
   "bw_background_gray": 255,
+  "extend_into_clock": true,
   "crops": {
     "front01.png": {
       "center_x": 441,

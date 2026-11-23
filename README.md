@@ -14,7 +14,7 @@ Watchfaces that share one engine: a character slides up over a background in a r
 - `faces/<name>/`: one complete Pebble project per face
   - `package.json`: UUID, display name, resources and message keys
   - `wscript`: builds `src/c/` plus `../../shared/src/c/`, with `src/c/` on the include path
-  - `src/c/face_config.h`: what the engine needs from the face: `NUM_FG_IMAGES`, `FG_RES_IDS`, the colors (`BG_COLOR` behind the images, `CLOCK_COLOR` for the digits), and the per-platform layout and clock font constants
+  - `src/c/face_config.h`: what the engine needs from the face: `NUM_FG_IMAGES`, `FG_RES_IDS`, the colors (`BG_COLOR` behind the images, `CLOCK_COLOR` for the digits, and optionally `CLOCK_OUTLINE_COLOR` with a per-platform `CLOCK_OUTLINE_W` for an outline that shows only where the digits cross an image), and the per-platform layout and clock font constants
   - `convert.json` (optional): the background colors for the image tool (see "Adding a face")
   - `src/pkjs/`: the Clay settings page (`config.js`) and the phone-side JS that starts it
   - `resources/`: images (originals in `resources/images/unscaled/`) and fonts

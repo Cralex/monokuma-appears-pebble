@@ -17,6 +17,10 @@
 // and the clock digits. BG_COLOR must match convert.json's colors.
 #define BG_COLOR          PBL_IF_COLOR_ELSE(GColorBrilliantRose, GColorWhite)
 #define CLOCK_COLOR       GColorBlack
+// A white outline keeps the digits readable where a pose (the raised wand)
+// reaches into the clock band; it's left out over the plain background.
+// CLOCK_OUTLINE_W (px) is set per platform below.
+#define CLOCK_OUTLINE_COLOR GColorWhite
 
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 shape and sits on the bottom edge; the clock is centered in the
@@ -33,6 +37,7 @@
 #define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
 #define LECO_Y            2
 #define SLIDE_STEP        9
+#define CLOCK_OUTLINE_W   1
 #elif defined(PBL_PLATFORM_CHALK)       // 180x180 round
 #define FG_X              19
 #define FG_W              142
@@ -42,6 +47,7 @@
 #define LECO_KEY          FONT_KEY_LECO_32_BOLD_NUMBERS
 #define LECO_Y            16
 #define SLIDE_STEP        9
+#define CLOCK_OUTLINE_W   1
 #elif defined(PBL_PLATFORM_GABBRO)      // 260x260 round
 #define FG_X              24
 #define FG_W              212
@@ -51,6 +57,7 @@
 #define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
 #define LECO_Y            24
 #define SLIDE_STEP        13
+#define CLOCK_OUTLINE_W   2
 #else                                   // emery, 200x228
 #define FG_X              0
 #define FG_W              200
@@ -60,4 +67,5 @@
 #define LECO_KEY          FONT_KEY_LECO_42_NUMBERS
 #define LECO_Y            0
 #define SLIDE_STEP        12    // pixels per frame
+#define CLOCK_OUTLINE_W   2
 #endif

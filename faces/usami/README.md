@@ -5,7 +5,7 @@ A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/REA
 ## Look
 
 - **Background:** pink (`GColorBrilliantRose`) on color watches and white on black-and-white ones, with a blue gem. Light pinks would look almost white on the real display, so this face uses Brilliant Rose.
-- **Clock:** black digits, DorBlue by default (`resources/fonts/dorblue-font/`), with LECO as the alternative in the settings.
+- **Clock:** black digits, DorBlue by default (`resources/fonts/dorblue-font/`), with LECO as the alternative in the settings. Where the digits cross a pose (the raised wand), they get a white outline (`CLOCK_OUTLINE_COLOR`, 2 px on emery and gabbro, 1 px on the smaller screens); over the plain background there's none.
 
 The colors are set in two places that must agree: `BG_COLOR` and `CLOCK_COLOR` in `src/c/face_config.h` (for the watch), and `convert.json` (for the image tool, which fills the originals' transparent areas with the background color).
 
@@ -21,7 +21,7 @@ Then convert the images (next section).
 
 ## The poses
 
-The originals in `resources/images/unscaled/` (`front01.png` … `front12.png`) are full-body sprites with transparent backgrounds, all drawn at the same scale. Unlike Monokuma's, they aren't zoomed one by one: each gets a fixed crop window, the same size for every pose, so Usami is the same size in all of them. The window is placed by the heart brooch on Usami's collar. It runs from just above the ear tips to the top of the skirt, so the skirt is cut off the way Monokuma's originals stop at his belly. A wand raised higher than the ears is cut off at the top (front04), and wing tips can be cut at the sides.
+The originals in `resources/images/unscaled/` (`front01.png` … `front12.png`) are full-body sprites with transparent backgrounds, all drawn at the same scale. Unlike Monokuma's, they aren't zoomed one by one: each gets a fixed crop window, the same size for every pose, so Usami is the same size in all of them. The window is placed by the heart brooch on Usami's collar. It runs from just above the ear tips to the top of the skirt, so the skirt is cut off the way Monokuma's originals stop at his belly. Anything above the window, usually the wand, isn't cut off: with `"extend_into_clock": true` in `convert.json`, those poses (01, 02, 04, 09, 10 and 12) come out taller and reach up into the pink clock band, up to its full height, and the digits are drawn over them. Wing tips can still be cut at the sides.
 
 `tools/find_crops.py` finds each brooch and writes the windows to `convert.json` (`"crops"`). To show more or less of Usami, change `ABOVE` and `BELOW` at the top of the script.
 
