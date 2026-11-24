@@ -1,6 +1,6 @@
 # Magical Miracle Girl ★ Usami
 
-A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/README.md). Usami appears in one of 12 poses. On the watch the name is "Magical Miracle Girl Usami" (`displayName` in `package.json`), without the ★: the watch's system fonts have no ★ glyph and would draw a box. The settings page heading keeps it.
+A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/README.md). Usami appears in one of 12 poses. The ★ in the name (`displayName` in `package.json`) is one of the few symbols the watch's system font has: it shows as a small peach star on color watches (black on basalt), checked on emery, basalt and gabbro. Most similar symbols (☆ ✦ ✧) show as boxes.
 
 ## Look
 
