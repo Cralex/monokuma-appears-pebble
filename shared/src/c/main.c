@@ -21,6 +21,18 @@
 #define INITIAL_DELAY_MAX_MS 3000
 #define PERSIST_KEY_SHAKE 0
 #define PERSIST_KEY_FONT  1
+#define PERSIST_KEY_COUNT 2
+
+// Optional minute counter (a face turns it on with #define MINUTE_COUNTER 1
+// in face_config.h and adds a MINUTE_COUNT message key): counts the minutes
+// the face has been running, one per minute tick, kept in RAM and saved
+// every COUNT_SAVE_MINUTES and when the face closes, so a crash loses at most
+// a few minutes and only uninstalling clears it. The phone asks for it by
+// sending MINUTE_COUNT; the watch answers with the count.
+#ifndef MINUTE_COUNTER
+#define MINUTE_COUNTER    0
+#endif
+#define COUNT_SAVE_MINUTES 10
 
 // Debug: show every image in order, one every DEBUG_CYCLE_MS once it's fully
 // shown, with the image number (01-NN) in place of the time. Set to 0 for
@@ -79,6 +91,9 @@ static int        s_bg_alpha    = FADE_MAX;  // start with background visible
 static int        s_last_fg     = -1;
 static bool       s_clock_appeared  = false;
 static bool       s_shake_enabled   = true;
+#if MINUTE_COUNTER
+static int32_t    s_minute_count    = 0;
+#endif
 static int        s_last_slide_minute = -1;
 static char       s_time_buf[6];
 
@@ -427,7 +442,23 @@ static int32_t tuple_int(const Tuple *t) {
     return t->type == TUPLE_CSTRING ? atoi(t->value->cstring) : t->value->int32;
 }
 
+#if MINUTE_COUNTER
+static void send_minute_count(void) {
+    DictionaryIterator *out;
+    if (app_message_outbox_begin(&out) == APP_MSG_OK) {
+        dict_write_int32(out, MESSAGE_KEY_MINUTE_COUNT, s_minute_count);
+        app_message_outbox_send();
+    }
+}
+#endif
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+#if MINUTE_COUNTER
+    if (dict_find(iter, MESSAGE_KEY_MINUTE_COUNT)) {
+        send_minute_count();
+    }
+#endif
+
     Tuple *font = dict_find(iter, MESSAGE_KEY_CLOCK_FONT);
     if (font) {
         int32_t v = tuple_int(font);
@@ -450,6 +481,12 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
+#if MINUTE_COUNTER
+    if (s_minute_count < INT32_MAX) { s_minute_count++; }
+    if (s_minute_count % COUNT_SAVE_MINUTES == 0) {
+        persist_write_int(PERSIST_KEY_COUNT, s_minute_count);
+    }
+#endif
 #if DEBUG_CYCLE
     return;  // the debug timer drives image changes
 #endif
@@ -523,6 +560,9 @@ static void init(void) {
     s_shake_enabled = persist_exists(PERSIST_KEY_SHAKE)
                       ? persist_read_bool(PERSIST_KEY_SHAKE)
                       : true;
+#if MINUTE_COUNTER
+    s_minute_count = persist_read_int(PERSIST_KEY_COUNT);  // 0 if never saved
+#endif
 
     app_message_register_inbox_received(inbox_received_handler);
     app_message_open(64, 64);
@@ -537,6 +577,9 @@ static void init(void) {
 }
 
 static void deinit(void) {
+#if MINUTE_COUNTER
+    persist_write_int(PERSIST_KEY_COUNT, s_minute_count);
+#endif
     if (s_window) {
         window_destroy(s_window);
         s_window = NULL;

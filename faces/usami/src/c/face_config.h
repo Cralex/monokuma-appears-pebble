@@ -22,6 +22,10 @@
 // CLOCK_OUTLINE_W (px) is set per platform below.
 #define CLOCK_OUTLINE_COLOR GColorWhite
 
+// Count the minutes the face runs (shown as "Hope Fragments Collected" in
+// the settings page; see src/pkjs/index.js).
+#define MINUTE_COUNTER    1
+
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 height and sits on the bottom edge; on the round screens it spans
 // the full width so the sides of a pose aren't cut. The clock is centered in

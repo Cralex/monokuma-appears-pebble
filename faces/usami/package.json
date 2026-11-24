@@ -30,7 +30,8 @@
     ],
     "messageKeys": [
       "CLOCK_FONT",
-      "SHAKE_ENABLED"
+      "SHAKE_ENABLED",
+      "MINUTE_COUNT"
     ],
     "resources": {
       "media": [

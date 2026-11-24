@@ -4,6 +4,12 @@ module.exports = [
     "defaultValue": "Magical Miracle Girl \u2605 Usami"
   },
   {
+    // The gem and the Hope Fragments count; index.js fills it in.
+    "type": "text",
+    "id": "hope",
+    "defaultValue": ""
+  },
+  {
     "type": "section",
     "items": [
       {

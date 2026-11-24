@@ -9,9 +9,17 @@ A watchface built on the shared engine, like [Monokuma Appears!](../monokuma/REA
 
 The colors are set in two places that must agree: `BG_COLOR` and `CLOCK_COLOR` in `src/c/face_config.h` (for the watch), and `convert.json` (for the image tool, which fills the originals' transparent areas with the background color).
 
+## Hope Fragments
+
+The watch counts the minutes Usami has been the active face, one per minute. The settings page shows it under the title, below a small gem, as "Hope Fragments Collected", *count*/365 (never more than 365, though the watch keeps counting).
+
+- The watch keeps the count in memory and saves it every 10 minutes and when the face closes, so it survives restarts and updates and is cleared only by uninstalling. A crash or a dead battery that skips the normal shutdown can lose up to 9 minutes.
+- The phone asks for the count (the `MINUTE_COUNT` message key) when its JS starts and when the settings page is opened, and opens the page once the watch answers, or after 2 seconds with the last count it received.
+- The counter is an engine option (`#define MINUTE_COUNTER 1` in `src/c/face_config.h`); the page part is in `src/pkjs/index.js`.
+
 ## The gem
 
-`tools/gem_reference.png` is the original 45×45 gem. `tools/make_gem.py` redraws it as a sharp vector replica from its geometry and colors. It writes `resources/images/unscaled/background1.png` (the gem on a transparent 200×228 background) and `resources/images/unscaled/menu_icon.png` (the gem alone, for the switcher icon). To change the gem's shape, size or position, edit the constants at the top of the script and run, from the repo root:
+`tools/gem_reference.png` is the original 45×45 gem. `tools/make_gem.py` redraws it as a sharp vector replica from its geometry and colors. It writes `resources/images/unscaled/background1.png` (the gem on a transparent 200×228 background) and `resources/images/unscaled/menu_icon.png` (the gem alone, for the switcher icon), plus `src/pkjs/gem_image.js` (the settings-page gem, as an embedded PNG). To change the gem's shape, size or position, edit the constants at the top of the script and run, from the repo root:
 
 ```sh
 uv run --with pillow python3 -I faces/usami/tools/make_gem.py
