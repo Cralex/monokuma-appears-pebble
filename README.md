@@ -10,11 +10,12 @@ Watchfaces that share one engine: a character slides up over a background in a r
 ## Layout
 
 - `shared/src/c/main.c`: the watchface engine (fades, slides, clock, shake and settings), compiled into every face
+- `shared/src/c/minute_counter.c`: the optional minute counter (off unless a face turns it on)
 - `shared/tools/convert_images.py`: scales and color-converts a face's original images for every platform
 - `faces/<name>/`: one complete Pebble project per face
   - `package.json`: UUID, display name, resources and message keys
   - `wscript`: builds `src/c/` plus `../../shared/src/c/`, with `src/c/` on the include path
-  - `src/c/face_config.h`: what the engine needs from the face: `NUM_FG_IMAGES`, `FG_RES_IDS`, the colors (`BG_COLOR` behind the images, `CLOCK_COLOR` for the digits, and optionally `CLOCK_OUTLINE_COLOR` with a per-platform `CLOCK_OUTLINE_W` for an outline that shows only where the digits cross an image),, the per-platform layout and clock font constants, and optionally `MINUTE_COUNTER 1` to count the minutes the face runs (with a `MINUTE_COUNT` message key; see Usami)
+  - `src/c/face_config.h`: what the engine needs from the face: `NUM_FG_IMAGES`, `FG_RES_IDS`, the colors (`BG_COLOR` behind the images, `CLOCK_COLOR` for the digits, and optionally `CLOCK_OUTLINE_COLOR` with a per-platform `CLOCK_OUTLINE_W` for an outline that shows only where the digits cross an image),, the per-platform layout and clock font constants, and optionally `MINUTE_COUNTER 1` to record the minutes the face runs (with the `MINUTE_*` message keys; see Usami's README)
   - `convert.json` (optional): the background colors for the image tool (see "Adding a face")
   - `src/pkjs/`: the Clay settings page (`config.js`) and the phone-side JS that starts it
   - `resources/`: images (originals in `resources/images/unscaled/`) and fonts

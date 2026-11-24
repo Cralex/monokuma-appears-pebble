@@ -11,11 +11,16 @@ The colors are set in two places that must agree: `BG_COLOR` and `CLOCK_COLOR` i
 
 ## Hope Fragments
 
-The watch counts the minutes Usami has been the active face, one per minute. The settings page shows it under the title, below a small gem, as "Hope Fragments Collected", *count*/365 (never more than 365, though the watch keeps counting).
+A Hope Fragment is a minute of clock time during which Usami was the active face, on any of the user's watches. The settings page shows the count under the title, below a small gem, as "Hope Fragments Collected", *count*/365 (never more than 365; the count itself keeps going).
 
-- The watch keeps the count in memory and saves it every 10 minutes and when the face closes, so it survives restarts and updates and is cleared only by uninstalling. A crash or a dead battery that skips the normal shutdown can lose up to 9 minutes.
-- The phone asks for the count (the `MINUTE_COUNT` message key) when its JS starts and when the settings page is opened, and opens the page once the watch answers, or after 2 seconds with the last count it received.
-- The counter is an engine option (`#define MINUTE_COUNTER 1` in `src/c/face_config.h`); the page part is in `src/pkjs/index.js`.
+Each minute counts once however many watches were running Usami then, and a watch used away from the phone still counts in full once it reconnects:
+
+- Each watch records the clock minutes it ran the face as spans (runs of consecutive minutes), plus its own lifetime total. It keeps them in memory and saves them every 10 minutes and when the face closes, so a crash loses at most a few minutes; only uninstalling clears them.
+- When the phone app starts and when the settings page is opened, the phone asks the watch for its spans. It merges them with the ones it already has from every watch, and the count is the number of minutes they cover. The watch forgets spans once the phone has stored them, and it keeps up to 64 unsent; past that, during a long time away from the phone, the oldest are dropped.
+- The count is never lower than the highest lifetime total a watch has reported, so it survives the phone app's data being lost (and dropped spans).
+- The settings page opens once the watch answers, or after 2 seconds with what the phone already has.
+
+The watch part is `shared/src/c/minute_counter.c`, turned on with `#define MINUTE_COUNTER 1` in `src/c/face_config.h` and the `MINUTE_*` message keys in `package.json`. The phone part is in `src/pkjs/index.js`.
 
 ## The gem
 

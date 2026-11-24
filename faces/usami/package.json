@@ -31,7 +31,11 @@
     "messageKeys": [
       "CLOCK_FONT",
       "SHAKE_ENABLED",
-      "MINUTE_COUNT"
+      "MINUTE_SYNC",
+      "MINUTE_FIRST_ID",
+      "MINUTE_SPANS",
+      "MINUTE_OPEN",
+      "MINUTE_TOTAL"
     ],
     "resources": {
       "media": [
