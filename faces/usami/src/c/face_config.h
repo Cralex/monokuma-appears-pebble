@@ -23,8 +23,10 @@
 #define CLOCK_OUTLINE_COLOR GColorWhite
 
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
-// 200:172 shape and sits on the bottom edge; the clock is centered in the
-// band above it. Keep FG sizes in sync with shared/tools/convert_images.py.
+// 200:172 height and sits on the bottom edge; on the round screens it spans
+// the full width so the sides of a pose aren't cut. The clock is centered in
+// the band above it. Keep FG sizes in sync with shared/tools/convert_images.py
+// (and convert.json's "full_width").
 // CUSTOM_FONT_* is the bundled clock font (DorBlue here); LECO_* is
 // Pebble's built-in alternative offered in the settings.
 #if defined(PBL_PLATFORM_BASALT) || defined(PBL_PLATFORM_APLITE) || \
@@ -39,8 +41,8 @@
 #define SLIDE_STEP        9
 #define CLOCK_OUTLINE_W   1
 #elif defined(PBL_PLATFORM_CHALK)       // 180x180 round
-#define FG_X              19
-#define FG_W              142
+#define FG_X              0     // full width (convert.json "full_width")
+#define FG_W              180
 #define FG_H              123
 #define CUSTOM_FONT_RES   RESOURCE_ID_FONT_DORBLUE_32
 #define CUSTOM_FONT_Y     15
@@ -49,8 +51,8 @@
 #define SLIDE_STEP        9
 #define CLOCK_OUTLINE_W   1
 #elif defined(PBL_PLATFORM_GABBRO)      // 260x260 round
-#define FG_X              24
-#define FG_W              212
+#define FG_X              0     // full width (convert.json "full_width")
+#define FG_W              260
 #define FG_H              182
 #define CUSTOM_FONT_RES   RESOURCE_ID_FONT_DORBLUE_46
 #define CUSTOM_FONT_Y     20

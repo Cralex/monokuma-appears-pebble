@@ -48,6 +48,11 @@ A face can have a faces/<face>/convert.json; every key is optional:
         of the clock band. That image is taller than the foreground area,
         and the engine draws the extra rows over the band. The band must be
         plain background color, so the extra rows can be opaque.
+    "full_width": true  with "crops": on the round platforms, whose
+        foreground areas are narrower than the screen, the views come out
+        as wide as the screen (same zoom, more of the sides), so wings and
+        wands aren't cut where the screen still has room. Set FG_X 0 and
+        FG_W to the screen width for chalk and gabbro in face_config.h.
 Without background1.png's red shape, the menu icon comes from
 unscaled/menu_icon.png (an RGBA image of any size) instead.
 
@@ -428,7 +433,12 @@ def main():
             if name in crops:
                 max_extra = (spec["screen"][1] - fg_h
                              if config.get("extend_into_clock") else 0)
-                scaled = crop_view(src, fg_w, fg_h, fill, crops[name],
+                # "full_width": span the whole screen (the round ones'
+                # foregrounds are narrower) at the same zoom, so the view
+                # just widens instead of cutting the sides.
+                view_w = (spec["screen"][0] if config.get("full_width")
+                          else fg_w)
+                scaled = crop_view(src, view_w, fg_h, fill, crops[name],
                                    max_extra)
             else:
                 scaled = scale(src, fg_w, fg_h, fill)
