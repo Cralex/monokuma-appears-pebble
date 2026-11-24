@@ -9,8 +9,9 @@ is always higher up).
 
 The window runs from ABOVE px above the brooch (just over the ear tips) to
 BELOW px under it (the top of the skirt, so the bottom is cropped off the way
-Monokuma's originals stop at his belly), centered on the brooch. Anything
-outside it, such as the top of a raised wand or the wing tips, is cut off.
+Monokuma's originals stop at his belly), centered on the brooch, give or take
+a pose's SHIFT_X. Anything outside it, such as the top of a raised wand or the
+wing tips, is cut off.
 shared/tools/convert_images.py scales the window to each platform's
 foreground size.
 
@@ -28,6 +29,11 @@ from scipy import ndimage
 ABOVE = 440        # window top, in source px above the brooch
 BELOW = 170        # window bottom, in source px below the brooch
 MIN_CLUSTER = 40   # ignore red specks smaller than this (px)
+
+# Per-pose nudges, in source px: positive moves Usami right in the frame
+# (the window left). front05 leans to our left, leaving the right side empty;
+# 53 px is about 15 px on emery, just short of cutting the right wing tip.
+SHIFT_X = {"front05.png": 53}
 
 
 def find_brooch(path):
@@ -58,7 +64,8 @@ def main():
     while os.path.exists(os.path.join(unscaled, f"front{n:02d}.png")):
         name = f"front{n:02d}.png"
         x, y = find_brooch(os.path.join(unscaled, name))
-        crops[name] = {"center_x": x, "top": y - ABOVE, "bottom": y + BELOW}
+        crops[name] = {"center_x": x - SHIFT_X.get(name, 0),
+                       "top": y - ABOVE, "bottom": y + BELOW}
         print(f"{name}: brooch at ({x}, {y})")
         n += 1
     config["crops"] = crops
