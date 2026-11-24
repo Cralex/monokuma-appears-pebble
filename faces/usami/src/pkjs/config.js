@@ -1,7 +1,7 @@
 module.exports = [
   {
     "type": "heading",
-    "defaultValue": "Usami Appears!"
+    "defaultValue": "Magical Miracle Girl \u2605 Usami"
   },
   {
     "type": "section",

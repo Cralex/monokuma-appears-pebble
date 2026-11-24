@@ -10,7 +10,7 @@
     "@rebble/clay": "^1.1.0"
   },
   "pebble": {
-    "displayName": "Usami Appears!",
+    "displayName": "Magical Miracle Girl Usami",
     "uuid": "62c7bf07-4063-4c85-93cd-a357567144a3",
     "sdkVersion": "3",
     "enableMultiJS": true,

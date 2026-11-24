@@ -5,7 +5,7 @@ Watchfaces that share one engine: a character slides up over a background in a r
 | Face | Folder |
 |---|---|
 | Monokuma Appears! | [`faces/monokuma/`](faces/monokuma/README.md) |
-| Usami Appears! (in progress, placeholder art) | [`faces/usami/`](faces/usami/README.md) |
+| Magical Miracle Girl ★ Usami | [`faces/usami/`](faces/usami/README.md) |
 
 ## Layout
 
