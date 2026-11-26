@@ -11,13 +11,13 @@ The colors are set in two places that must agree: `BG_COLOR` and `CLOCK_COLOR` i
 
 ## Hope Fragments
 
-A Hope Fragment is a minute of clock time during which Usami was the active face, on any of the user's watches. The settings page shows the count under the title, below a small gem, as "Hope Fragments Collected", *count*/365 (never more than 365; the count itself keeps going).
+Usami earns a Hope Fragment for every 4 hours she's the active face, up to 4 a day (days in the phone's time zone), so wearing her every day takes about 3 months to reach 365. Time carries over from one day to the next until it makes a fragment; once a day's 4 are earned, the rest of that day doesn't count. The settings page shows, under the title and a small gem, "Hope Fragments Collected", *count*/365, and one line under it: "Next fragment in 2 h 15 min", or "Today's fragments collected ✓" once the day's 4 are earned (no line at 365). The numbers are `FRAGMENT_MINUTES`, `FRAGMENTS_PER_DAY` and `HOPE_GOAL` at the top of `src/pkjs/index.js`.
 
 Each minute counts once however many watches were running Usami then, and a watch used away from the phone still counts in full once it reconnects:
 
 - Each watch records the clock minutes it ran the face as spans (runs of consecutive minutes), plus its own lifetime total. It keeps them in memory and saves them every 10 minutes and when the face closes, so a crash loses at most a few minutes; only uninstalling clears them.
-- When the phone app starts and when the settings page is opened, the phone asks the watch for its spans. It merges them with the ones it already has from every watch, and the count is the number of minutes they cover. The watch forgets spans once the phone has stored them, and it keeps up to 64 unsent; past that, during a long time away from the phone, the oldest are dropped.
-- The count is never lower than the highest lifetime total a watch has reported, so it survives the phone app's data being lost (and dropped spans).
+- When the phone app starts and when the settings page is opened, the phone asks the watch for its spans. It merges them with the ones it already has from every watch and works out the fragments from the minutes they cover. Spans older than 30 days are folded into minutes per day. The watch forgets spans once the phone has stored them, and it keeps up to 64 unsent; past that, during a long time away from the phone, the oldest are dropped.
+- The count is never lower than what the highest lifetime total a watch has reported would earn worn around the clock (4 fragments per 24 hours), so it survives the phone app's data being lost (and dropped spans) without ever giving more than was earned.
 - The settings page opens once the watch answers, or after 2 seconds with what the phone already has.
 
 The watch part is `shared/src/c/minute_counter.c`, turned on with `#define MINUTE_COUNTER 1` in `src/c/face_config.h` and the `MINUTE_*` message keys in `package.json`. The phone part is in `src/pkjs/index.js`.
