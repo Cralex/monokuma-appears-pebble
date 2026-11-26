@@ -4,6 +4,12 @@ module.exports = [
     "defaultValue": "Monokuma Appears!"
   },
   {
+    // The red shape and the Seeds of Despair count; index.js fills it in.
+    "type": "text",
+    "id": "counter",
+    "defaultValue": ""
+  },
+  {
     "type": "section",
     "items": [
       {

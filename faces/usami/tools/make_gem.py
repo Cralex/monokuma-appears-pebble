@@ -11,14 +11,11 @@ writes, into resources/images/unscaled/:
 - menu_icon.png: the gem alone, which convert_images.py fits into the
   25x25 switcher icon.
 
-and src/pkjs/gem_image.js: a small gem as a PNG data URI, for the top of the
-settings page.
+shared/tools/page_image.py makes the settings-page gem from menu_icon.png.
 
 Usage (from the repo root):
     uv run --with pillow python3 -I faces/usami/tools/make_gem.py
 """
-import base64
-import io
 import os
 
 from PIL import Image, ImageDraw
@@ -40,8 +37,6 @@ BG_SIZE = (200, 228)      # emery screen
 GEM_H = 150               # gem height on emery, in px
 GEM_CENTER = (100, 140)   # below the 56 px clock band
 ICON_H = 100              # drawn large; convert_images.py scales it to 25
-PAGE_H = 96               # settings-page gem: 96 px, shown at 48 (sharp on
-                          # 2x phone screens)
 
 
 def draw_gem(size, height, center):
@@ -80,17 +75,7 @@ def main():
     side = ICON_H + 8
     draw_gem((side, side), ICON_H, (side / 2, side / 2)).save(
         os.path.join(out, "menu_icon.png"), optimize=True)
-    # The settings page is one data: URL, so the gem goes in as a data URI.
-    side = PAGE_H + 8
-    buf = io.BytesIO()
-    draw_gem((side, side), PAGE_H, (side / 2, side / 2)).save(
-        buf, "PNG", optimize=True)
-    uri = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
-    pkjs = os.path.join(here, "..", "src", "pkjs", "gem_image.js")
-    with open(pkjs, "w") as f:
-        f.write("// Written by tools/make_gem.py: the gem for the settings page.\n")
-        f.write(f"module.exports = '{uri}';\n")
-    print("wrote background1.png, menu_icon.png and src/pkjs/gem_image.js")
+    print("wrote background1.png and menu_icon.png")
 
 
 if __name__ == "__main__":

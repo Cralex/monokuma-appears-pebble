@@ -20,6 +20,10 @@
 #define BG_COLOR          GColorBlack
 #define CLOCK_COLOR       GColorWhite
 
+// Count the minutes the face runs (shown as "Seeds of Despair Planted" in
+// the settings page; see src/pkjs/index.js).
+#define MINUTE_COUNTER    1
+
 // Per-platform layout, scaled from emery's. The foreground keeps emery's
 // 200:172 shape and sits on the bottom edge; the clock is centered in the
 // band above it. Keep FG sizes in sync with shared/tools/convert_images.py.

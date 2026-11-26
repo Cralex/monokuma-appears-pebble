@@ -11,10 +11,12 @@ Watchfaces that share one engine: a character slides up over a background in a r
 
 - `shared/src/c/main.c`: the watchface engine (fades, slides, clock, shake and settings), compiled into every face
 - `shared/src/c/minute_counter.c`: the optional minute counter (off unless a face turns it on)
+- `shared/src/pkjs/minute_counter.js`: the counter's phone side, and the settings page that shows it (Usami's Hope Fragments, Monokuma's Seeds of Despair)
 - `shared/tools/convert_images.py`: scales and color-converts a face's original images for every platform
+- `shared/tools/page_image.py`: makes a face's settings-page image (`src/pkjs/page_image.js`) from its menu icon or red shape
 - `faces/<name>/`: one complete Pebble project per face
   - `package.json`: UUID, display name, resources and message keys
-  - `wscript`: builds `src/c/` plus `../../shared/src/c/`, with `src/c/` on the include path
+  - `wscript`: builds `src/c/` plus `../../shared/src/c/`, with `src/c/` on the include path, and bundles `src/pkjs/` with `../../shared/src/pkjs/`
   - `src/c/face_config.h`: what the engine needs from the face: `NUM_FG_IMAGES`, `FG_RES_IDS`, the colors (`BG_COLOR` behind the images, `CLOCK_COLOR` for the digits, and optionally `CLOCK_OUTLINE_COLOR` with a per-platform `CLOCK_OUTLINE_W` for an outline that shows only where the digits cross an image),, the per-platform layout and clock font constants, and optionally `MINUTE_COUNTER 1` to record the minutes the face runs (with the `MINUTE_*` message keys; see Usami's README)
   - `convert.json` (optional): the background colors for the image tool (see "Adding a face")
   - `src/pkjs/`: the Clay settings page (`config.js`) and the phone-side JS that starts it
@@ -36,6 +38,6 @@ pebble install --emulator emery
 2. Put `background1.png` (200×228) and `front01.png`, `front02.png`, … in `resources/images/unscaled/`, plus `menu_icon.png` (any size, with transparency) for the switcher icon. Without `menu_icon.png`, the tool makes the icon from a strong red shape in the background, the way Monokuma's is made. Then run `uv run --with pillow --with numpy python3 -I shared/tools/convert_images.py faces/<name>`.
 3. List one `IMAGE_FRONT_NN` bitmap per image in `package.json`, and set `NUM_FG_IMAGES` and `FG_RES_IDS` in `src/c/face_config.h` to match.
 4. For a background other than black, set `BG_COLOR` (and `CLOCK_COLOR`) in `face_config.h`, and the same colors in `convert.json`: `"background_color"` as the Pebble color's `[r, g, b]`, and `"bw_background_gray"` (0–255) for black-and-white watches. The tool fills transparent parts of the originals with them, so the images blend into the screen. Pick a strong color: on the real display, light pinks and pastels look almost white.
-5. Change the text in `src/pkjs/config.js`.
+5. Change the text in `src/pkjs/config.js`, and the counter's name, wording and numbers in `src/pkjs/index.js`. Make the settings-page image with `uv run --with pillow --with numpy python3 -I shared/tools/page_image.py faces/<name>`.
 
 A change to `shared/` affects every face, so rebuild and check each one.

@@ -24,6 +24,16 @@ Settings use [Clay](https://github.com/pebble-dev/clay) (the `@rebble/clay` pack
 
 To try the settings page in the emulator, run `pebble emu-app-config --emulator emery`.
 
+## Seeds of Despair
+
+Monokuma plants a Seed of Despair for every 4 hours he's the active face, up to 4 a day (days in the phone's time zone), so wearing him every day takes about 3 months to reach 365. The settings page shows, under the title and the red shape, "Seeds of Despair Planted", *count*/365, and one line under it: "Next seed in 2 h 15 min", or "Today's seeds planted ✓" once the day's 4 are planted (no line at 365). Time on several watches at once counts once, and a watch used away from the phone counts in full when it reconnects.
+
+It's the same counter as Usami's Hope Fragments (how it works: [Usami's README](../usami/README.md#hope-fragments)). Here it's turned on with `#define MINUTE_COUNTER 1` in `src/c/face_config.h` and the `MINUTE_*` message keys in `package.json`; `src/pkjs/index.js` sets the text and numbers. The red shape on the page is `src/pkjs/page_image.js`, cut from `resources/images/unscaled/background1.png` by `shared/tools/page_image.py`:
+
+```sh
+uv run --with pillow --with numpy python3 -I shared/tools/page_image.py faces/monokuma
+```
+
 ## Build and run
 
 From this folder (`faces/monokuma/`):
@@ -38,8 +48,9 @@ pebble install --emulator emery   # or basalt, chalk, gabbro, aplite, diorite
 This face uses the shared watchface engine in [`shared/src/c/main.c`](../../shared/src/c/main.c); see the [repo README](../../README.md).
 
 - `src/c/face_config.h`: Monokuma's image count and resource IDs, per-platform layout and clock font, read by the shared engine
-- `src/pkjs/index.js`: phone-side JS (starts Clay)
+- `src/pkjs/index.js`: phone-side JS: the settings page and the Seeds of Despair (with the shared `shared/src/pkjs/minute_counter.js`)
 - `src/pkjs/config.js`: Clay settings page definition
+- `src/pkjs/page_image.js`: the red shape for the settings page, as an embedded PNG
 - `resources/fonts/dorblue-font/`: the DorBlue clock font, unchanged from the download, with its license file
 - `resources/images/`: the background and the 16 `front01`–`front16` images in Pebble colors. Emery's files have no suffix; the other platforms' use Pebble's file tags (`front01~basalt.png`); aplite and diorite share the `~bw` files
 - `resources/images/menu_icon.png`: 25×25 icon for the watchface switcher, made from the background's red shape with a black outline

@@ -6,7 +6,7 @@ module.exports = [
   {
     // The gem and the Hope Fragments count; index.js fills it in.
     "type": "text",
-    "id": "hope",
+    "id": "counter",
     "defaultValue": ""
   },
   {

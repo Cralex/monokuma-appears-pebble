@@ -11,7 +11,7 @@ The colors are set in two places that must agree: `BG_COLOR` and `CLOCK_COLOR` i
 
 ## Hope Fragments
 
-Usami earns a Hope Fragment for every 4 hours she's the active face, up to 4 a day (days in the phone's time zone), so wearing her every day takes about 3 months to reach 365. Time carries over from one day to the next until it makes a fragment; once a day's 4 are earned, the rest of that day doesn't count. The settings page shows, under the title and a small gem, "Hope Fragments Collected", *count*/365, and one line under it: "Next fragment in 2 h 15 min", or "Today's fragments collected ✓" once the day's 4 are earned (no line at 365). The numbers are `FRAGMENT_MINUTES`, `FRAGMENTS_PER_DAY` and `HOPE_GOAL` at the top of `src/pkjs/index.js`.
+Usami earns a Hope Fragment for every 4 hours she's the active face, up to 4 a day (days in the phone's time zone), so wearing her every day takes about 3 months to reach 365. Time carries over from one day to the next until it makes a fragment; once a day's 4 are earned, the rest of that day doesn't count. The settings page shows, under the title and a small gem, "Hope Fragments Collected", *count*/365, and one line under it: "Next fragment in 2 h 15 min", or "Today's fragments collected ✓" once the day's 4 are earned (no line at 365). The numbers (`unitMinutes`, `perDay`, `goal`) and the text are in `src/pkjs/index.js`.
 
 Each minute counts once however many watches were running Usami then, and a watch used away from the phone still counts in full once it reconnects:
 
@@ -20,17 +20,21 @@ Each minute counts once however many watches were running Usami then, and a watc
 - The count is never lower than what the highest lifetime total a watch has reported would earn worn around the clock (4 fragments per 24 hours), so it survives the phone app's data being lost (and dropped spans) without ever giving more than was earned.
 - The settings page opens once the watch answers, or after 2 seconds with what the phone already has.
 
-The watch part is `shared/src/c/minute_counter.c`, turned on with `#define MINUTE_COUNTER 1` in `src/c/face_config.h` and the `MINUTE_*` message keys in `package.json`. The phone part is in `src/pkjs/index.js`.
+The watch part is `shared/src/c/minute_counter.c`, turned on with `#define MINUTE_COUNTER 1` in `src/c/face_config.h` and the `MINUTE_*` message keys in `package.json`. The phone part, shared with Monokuma's Seeds of Despair, is `shared/src/pkjs/minute_counter.js`; `src/pkjs/index.js` gives it Usami's text and numbers, and the gem image in `src/pkjs/page_image.js`, made from `menu_icon.png` by `shared/tools/page_image.py`.
 
 ## The gem
 
-`tools/gem_reference.png` is the original 45×45 gem. `tools/make_gem.py` redraws it as a sharp vector replica from its geometry and colors. It writes `resources/images/unscaled/background1.png` (the gem on a transparent 200×228 background) and `resources/images/unscaled/menu_icon.png` (the gem alone, for the switcher icon), plus `src/pkjs/gem_image.js` (the settings-page gem, as an embedded PNG). To change the gem's shape, size or position, edit the constants at the top of the script and run, from the repo root:
+`tools/gem_reference.png` is the original 45×45 gem. `tools/make_gem.py` redraws it as a sharp vector replica from its geometry and colors. It writes `resources/images/unscaled/background1.png` (the gem on a transparent 200×228 background) and `resources/images/unscaled/menu_icon.png` (the gem alone, for the switcher icon and the settings page). To change the gem's shape, size or position, edit the constants at the top of the script and run, from the repo root:
 
 ```sh
 uv run --with pillow python3 -I faces/usami/tools/make_gem.py
 ```
 
-Then convert the images (next section).
+Then convert the images (next section), and remake the settings-page gem:
+
+```sh
+uv run --with pillow --with numpy python3 -I shared/tools/page_image.py faces/usami
+```
 
 ## The poses
 
